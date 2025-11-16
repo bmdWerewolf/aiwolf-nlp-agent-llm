@@ -267,3 +267,22 @@ $RECYCLE.BIN/
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,windows,python,venv
 
 config/config.yml
+
+#.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.development
+.env.test
+.env.production
+#config
+config/config_lxy.yml
+#.exe
+server/aiwolf-nlp-server-linux-amd64
+server/aiwolf-nlp-server-windows-amd64.exe
+# Docker
+#logs
+log/
+/server/logs/
