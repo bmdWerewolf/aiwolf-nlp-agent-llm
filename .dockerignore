@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Python 缓存
+__pycache__
+*.pyc
+*.pyo
+.pytest_cache
+
+# 虚拟环境
+.venv
+venv
+env
+
+# IDE
+.vscode
+.idea
+.cursor
+
+# 日志（运行时生成）
+log/
+*.log
+
+# 配置文件（运行时挂载）
+config/
+
+# 服务器相关（单独构建）
+server/
+
+# 其他
+*.md
+LICENSE
+.env
+.env.*
+
