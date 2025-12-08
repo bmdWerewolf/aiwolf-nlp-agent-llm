@@ -286,3 +286,5 @@ server/aiwolf-nlp-server-windows-amd64.exe
 #logs
 log/
 /server/logs/
+# myNote
+command.md

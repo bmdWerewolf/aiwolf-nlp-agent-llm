@@ -226,11 +226,14 @@ class Agent:
         model_type = str(self.config["llm"]["type"])
         match model_type:
             case "openai":
-                self.llm_model = ChatOpenAI(
-                    model=str(self.config["openai"]["model"]),
-                    temperature=float(self.config["openai"]["temperature"]),
-                    api_key=SecretStr(os.environ["OPENAI_API_KEY"]),
-                )
+                openai_kwargs: dict[str, Any] = {
+                    "model": str(self.config["openai"]["model"]),
+                    "temperature": float(self.config["openai"]["temperature"]),
+                    "api_key": SecretStr(os.environ["OPENAI_API_KEY"]),
+                }
+                if self.config["openai"].get("base_url"):
+                    openai_kwargs["base_url"] = str(self.config["openai"]["base_url"])
+                self.llm_model = ChatOpenAI(**openai_kwargs)
             case "google":
                 self.llm_model = ChatGoogleGenerativeAI(
                     model=str(self.config["google"]["model"]),
