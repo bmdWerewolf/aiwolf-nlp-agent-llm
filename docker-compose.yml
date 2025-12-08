@@ -1,10 +1,10 @@
 # ============================================
-# AIWolf NLP - Docker Compose 配置
-# 一键启动 Server + Agent
+# AIWolf NLP - Docker Compose Configuration
+# One-click startup for Server + Agent
 # ============================================
 
 services:
-  # 游戏服务器
+  # Game Server
   server:
     build:
       context: ./server
@@ -13,7 +13,7 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      # 日志挂载到本地
+      # Mount logs to local directory
       - ./server/logs:/app/log
     restart: unless-stopped
     healthcheck:
@@ -32,19 +32,18 @@ services:
       server:
         condition: service_healthy
     environment:
-      # API Key 从 .env 文件读取
+      # API Key is read from .env file
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
     volumes:
-      # 配置文件挂载（修改后立即生效）
+      # Config files mount (changes take effect immediately)
       - ./config:/app/config
-      # 日志挂载
+      # Logs mount
       - ./log:/app/log
-      # 【开发模式】源码挂载（修改代码后立即生效）
+      # [Dev Mode] Source code mount (code changes take effect immediately)
       - ./src:/app/src
     extra_hosts:
-      # 让容器能访问宿主机
+      # Allow container to access host machine
       - "host.docker.internal:host-gateway"
-    # 默认使用 config_opr.yml，可通过命令行覆盖
+    # Default config file, can be overridden via command line
     command: uv run python src/main.py -c ./config/config_opr.yml
-

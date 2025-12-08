@@ -2,13 +2,13 @@
 .git
 .gitignore
 
-# Python 缓存
+# Python cache
 __pycache__
 *.pyc
 *.pyo
 .pytest_cache
 
-# 虚拟环境
+# Virtual environment
 .venv
 venv
 env
@@ -18,19 +18,18 @@ env
 .idea
 .cursor
 
-# 日志（运行时生成）
+# Logs (generated at runtime)
 log/
 *.log
 
-# 配置文件（运行时挂载）
+# Config files (mounted at runtime)
 config/
 
-# 服务器相关（单独构建）
+# Server related (built separately)
 server/
 
-# 其他
+# Others
 *.md
 LICENSE
 .env
 .env.*
-
