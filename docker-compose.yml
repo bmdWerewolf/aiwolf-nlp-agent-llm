@@ -1,0 +1,50 @@
+# ============================================
+# AIWolf NLP - Docker Compose 配置
+# 一键启动 Server + Agent
+# ============================================
+
+services:
+  # 游戏服务器
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: aiwolf-server
+    ports:
+      - "8080:8080"
+    volumes:
+      # 日志挂载到本地
+      - ./server/logs:/app/log
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "true"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # AI Agent
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aiwolf-agent
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      # API Key 从 .env 文件读取
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+    volumes:
+      # 配置文件挂载（修改后立即生效）
+      - ./config:/app/config
+      # 日志挂载
+      - ./log:/app/log
+      # 【开发模式】源码挂载（修改代码后立即生效）
+      - ./src:/app/src
+    extra_hosts:
+      # 让容器能访问宿主机
+      - "host.docker.internal:host-gateway"
+    # 默认使用 config_opr.yml，可通过命令行覆盖
+    command: uv run python src/main.py -c ./config/config_opr.yml
+
