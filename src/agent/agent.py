@@ -27,6 +27,7 @@ if TYPE_CHECKING:
 from aiwolf_nlp_common.packet import Info, Packet, Request, Role, Setting, Status, Talk
 
 from utils.agent_logger import AgentLogger
+from utils.agent_memory_utils import AgentMemoryManager
 from utils.stoppable_thread import StoppableThread
 
 if TYPE_CHECKING:
@@ -73,6 +74,7 @@ class Agent:
         self.sent_whisper_count: int = 0
         self.llm_model: BaseChatModel | None = None
         self.llm_message_history: list[BaseMessage] = []
+        self.memory_manager = AgentMemoryManager(name, config)
 
         load_dotenv(Path(__file__).parent.joinpath("./../../config/.env"))
 
@@ -147,6 +149,9 @@ class Agent:
             self.talk_history: list[Talk] = []
             self.whisper_history: list[Talk] = []
             self.llm_message_history: list[BaseMessage] = []
+            self.memory_manager.clear_all()
+        # Update memory manager with current state
+        self.memory_manager.update_from_agent(self)
         self.agent_logger.logger.debug(packet)
 
     def get_alive_agents(self) -> list[str]:
@@ -197,6 +202,7 @@ class Agent:
             self.llm_message_history.append(HumanMessage(content=prompt))
             response = (self.llm_model | StrOutputParser()).invoke(self.llm_message_history)
             self.llm_message_history.append(AIMessage(content=response))
+            self.memory_manager.update_from_agent(self)
             self.agent_logger.logger.info(["LLM", prompt, response])
         except Exception:
             self.agent_logger.logger.exception("Failed to send message to LLM")
@@ -253,6 +259,7 @@ class Agent:
 
         昼開始リクエストに対する処理を行う.
         """
+        self.memory_manager.reset_day_cycle()
         self._send_message_to_llm(self.request)
 
     def whisper(self) -> str:
@@ -263,6 +270,7 @@ class Agent:
         Returns:
             str: Whisper message / 囁きメッセージ
         """
+        self.memory_manager.reset_night_cycle()
         response = self._send_message_to_llm(self.request)
         self.sent_whisper_count = len(self.whisper_history)
         return response or ""
@@ -339,6 +347,7 @@ class Agent:
 
         ゲーム終了リクエストに対する処理を行う.
         """
+        self.memory_manager.clear_all()
 
     @timeout
     def action(self) -> str | None:  # noqa: C901, PLR0911
