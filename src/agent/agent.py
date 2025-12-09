@@ -248,7 +248,11 @@ class Agent:
                 )
             case _:
                 raise ValueError(model_type, "Unknown LLM type")
-        self.llm_model = self.llm_model
+        
+        # Log the model being used
+        model_name = str(self.config[model_type]["model"])
+        self.agent_logger.logger.info(["MODEL_INIT", f"type={model_type}", f"model={model_name}"])
+        
         self._send_message_to_llm(self.request)
 
     def daily_initialize(self) -> None:
