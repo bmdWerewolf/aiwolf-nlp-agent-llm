@@ -1,10 +1,27 @@
 # ============================================
 # AIWolf NLP - Docker Compose Configuration
-# One-click startup for Server + Agent
+# ============================================
+#
+# Usage:
+#   Single team (5 agents, same config):
+#     docker-compose --env-file ./config/.env up
+#
+#   Multi team (2 teams, different configs):
+#     docker-compose --env-file ./config/.env --profile multi up
+#
+#   Custom server config:
+#     $env:SERVER_CONFIG="default_5_2Teams.yml"
+#     docker-compose --env-file ./config/.env --profile multi up
+#
+#   Rebuild images:
+#     docker-compose --env-file ./config/.env up --build
+#
 # ============================================
 
 services:
+  # ==========================================
   # Game Server
+  # ==========================================
   server:
     build:
       context: ./server
@@ -13,37 +30,73 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      # Mount logs to local directory
+      # Config files mount (changes take effect immediately, no rebuild needed)
+      - ./server:/app/config
+      # Logs mount
       - ./server/logs:/app/log
     restart: unless-stopped
+    # Dynamic server config selection via SERVER_CONFIG env variable
+    # Options: default_5.yml, default_5_2Teams.yml, default_13.yml
+    command: ["./aiwolf-nlp-server-linux-amd64", "-c", "./config/${SERVER_CONFIG:-default_5.yml}"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     healthcheck:
       test: ["CMD", "true"]
       interval: 5s
       timeout: 3s
       retries: 3
 
-  # AI Agent
+  # ==========================================
+  # Single Team Mode (default)
+  # - Uses one config file
+  # - For single team testing or self-match
+  # ==========================================
   agent:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: aiwolf-agent
+    profiles: ["single", "default"]
     depends_on:
       server:
         condition: service_healthy
     environment:
-      # API Key is read from .env file
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
     volumes:
-      # Config files mount (changes take effect immediately)
       - ./config:/app/config
-      # Logs mount
       - ./log:/app/log
-      # [Dev Mode] Source code mount (code changes take effect immediately)
       - ./src:/app/src
     extra_hosts:
-      # Allow container to access host machine
       - "host.docker.internal:host-gateway"
-    # Default config file, can be overridden via command line
-    command: uv run python src/main.py -c ./config/config_opr.yml
+    # Single config file
+    command: uv run python src/main.py -c ${CONFIG_FILE:-./config/config_opr.yml}
+
+  # ==========================================
+  # Multi Team Mode (--profile multi)
+  # - Uses multiple config files in ONE container
+  # - main.py handles multiple configs via multiprocessing
+  # ==========================================
+  agent-multi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aiwolf-agent-multi
+    profiles: ["multi"]
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+    volumes:
+      - ./config:/app/config
+      - ./log:/app/log
+      - ./src:/app/src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Multiple config files - main.py supports nargs="+"
+    command: uv run python src/main.py -c ${CONFIG_FILE1:-./config/config_opr_multi_1.yml} ${CONFIG_FILE2:-./config/config_opr_multi_2.yml}
