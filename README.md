@@ -31,3 +31,7 @@ cp config/config.en.yml.example config/config.yml
 ## その他
 
 実行方法や設定などその他については[aiwolf-nlp-agent](https://github.com/aiwolfdial/aiwolf-nlp-agent)をご確認ください。
+##
+
+
+##

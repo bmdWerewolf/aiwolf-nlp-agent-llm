@@ -1,4 +1,21 @@
-here is a sop when you encountered problems. and remember change all the specific files to your own version.
+first run the multimode command below 
+
+# recommand
+$env:SERVER_CONFIG = "default_5_2Teams.yml"
+$env:CONFIG_FILE1 = "./config/config_cot_example.yml"
+$env:CONFIG_FILE2 = "./config/config_cot_example_2.yml"
+
+docker-compose --env-file ./config/.env --profile multi up
+
+##
+$env:SERVER_CONFIG = "default_5_2Teams.yml"
+$env:AGENT_CONFIG_1 = "config_cot_example.yml"
+$env:AGENT_CONFIG_2 = "config_opr_multi_2.yml" 
+
+docker-compose --env-file ./config/.env --profile multi up
+
+
+# here is a sop when you encountered problems. and remember change all the specific files to your own version.
 # run all locally
 ./server/aiwolf-nlp-server-windows-amd64.exe -c ./server/default_5.yml
 python src/main.py -c ./config/config_opr_local.yml
@@ -46,10 +63,21 @@ docker rm -f aiwolf-server aiwolf-agent aiwolf-agent-multi 2>$null
 docker-compose --env-file ./config/.env --profile single up
 
 docker-compose --env-file ./config/.env --profile single down
-# multiple mode
-# set server use 2 Teams configs
+### multiple mode
+## set server use 2 Teams configs
+# (not recommend)use default. remember to check the config file's name in docker-compose
 $env:SERVER_CONFIG = "default_5_2Teams.yml"
 docker-compose --env-file ./config/.env --profile multi up
 
+# recommand
+$env:SERVER_CONFIG = "default_5_2Teams.yml"
+$env:AGENT_CONFIG_1 = "config_google_arena.yml"
+$env:AGENT_CONFIG_2 = "config_opr_multi_2.yml"
+
+docker-compose --env-file ./config/.env --profile multi up
+
+
 # run while preserving logs
 docker-compose --env-file ./config/.env --profile multi up 2>&1 | Tee-Object -FilePath ./docker-logs/$(Get-Date -Format "yyyyMMdd_HHmmss").log
+
+

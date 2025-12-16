@@ -72,6 +72,11 @@ services:
       - ./src:/app/src
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     # Single config file
     command: uv run python src/main.py -c ${CONFIG_FILE:-./config/config_opr.yml}
 
@@ -98,5 +103,10 @@ services:
       - ./src:/app/src
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     # Multiple config files - main.py supports nargs="+"
     command: uv run python src/main.py -c ${CONFIG_FILE1:-./config/config_opr_multi_1.yml} ${CONFIG_FILE2:-./config/config_opr_multi_2.yml}

@@ -5,8 +5,10 @@
 
 from __future__ import annotations
 
+import logging
 import os
 import random
+import re
 from pathlib import Path
 from time import sleep
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
@@ -76,6 +78,11 @@ class Agent:
 
         load_dotenv(Path(__file__).parent.joinpath("./../../config/.env"))
 
+        # Initialize COT (Chain of Thought) logger - separate from main agent logger
+        self.cot_logger: logging.Logger | None = None
+        if self._is_cot_enabled():
+            self._init_cot_logger(game_id)
+
     @staticmethod
     def timeout(func: Callable[P, T]) -> Callable[P, T]:
         """Decorator to set action timeout.
@@ -144,9 +151,9 @@ class Agent:
         if packet.whisper_history:
             self.whisper_history.extend(packet.whisper_history)
         if self.request == Request.INITIALIZE:
-            self.talk_history: list[Talk] = []
-            self.whisper_history: list[Talk] = []
-            self.llm_message_history: list[BaseMessage] = []
+            self.talk_history = []
+            self.whisper_history = []
+            self.llm_message_history = []
         self.agent_logger.logger.debug(packet)
 
     def get_alive_agents(self) -> list[str]:
@@ -161,16 +168,95 @@ class Agent:
             return []
         return [k for k, v in self.info.status_map.items() if v == Status.ALIVE]
 
+    def _is_cot_enabled(self) -> bool:
+        """Check if COT (Chain of Thought) is enabled in config.
+
+        COT（思維鏈）が設定で有効になっているかを確認する.
+
+        Returns:
+            bool: True if COT is enabled / COTが有効な場合True
+        """
+        return bool(self.config.get("cot", {}).get("enabled", False))
+
+    def _init_cot_logger(self, game_id: str) -> None:
+        """Initialize separate COT logger for Chain of Thought logging.
+
+        COT専用のロガーを初期化する（メインログとは別ファイルに出力）.
+
+        Args:
+            game_id (str): Game ID for log file organization / ログファイル整理用のゲームID
+        """
+        from datetime import UTC, datetime
+
+        from ulid import ULID
+
+        self.cot_logger = logging.getLogger(f"{self.agent_name}_cot")
+        self.cot_logger.setLevel(logging.INFO)
+        # Prevent propagation to root logger to avoid duplicate logs
+        self.cot_logger.propagate = False
+
+        if bool(self.config["log"]["file_output"]):
+            ulid: ULID = ULID.from_str(game_id)
+            tz = datetime.now(UTC).astimezone().tzinfo
+            # Create cot_log directory inside the main log directory
+            cot_output_dir = (
+                Path(str(self.config["log"]["output_dir"]))
+                / "cot_log"
+                / datetime.fromtimestamp(ulid.timestamp, tz=tz).strftime("%Y%m%d%H%M%S%f")[:-3]
+            )
+            cot_output_dir.mkdir(parents=True, exist_ok=True)
+
+            handler = logging.FileHandler(
+                cot_output_dir / f"{self.agent_name}_cot.log",
+                mode="w",
+                encoding="utf-8",
+            )
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(message)s")
+            handler.setFormatter(formatter)
+            self.cot_logger.addHandler(handler)
+
+    def _parse_cot_response(self, response: str) -> tuple[str, str]:
+        """Parse COT formatted response into thinking and action parts.
+
+        COT形式のレスポンスを思考部分とアクション部分に分割する.
+
+        Args:
+            response (str): Raw LLM response / LLMの生の応答
+
+        Returns:
+            tuple[str, str]: (thinking, action) tuple / (思考, アクション)のタプル
+        """
+        # Try to extract <thinking> tag (with or without closing tag)
+        thinking_match = re.search(r"<thinking>(.*?)</thinking>", response, re.DOTALL | re.IGNORECASE)
+        # Try to extract <action> tag (closing tag is optional since LLM may omit it)
+        action_match = re.search(r"<action>(.*?)(?:</action>|$)", response, re.DOTALL | re.IGNORECASE)
+
+        if thinking_match and action_match:
+            thinking = thinking_match.group(1).strip()
+            action = action_match.group(1).strip()
+        elif action_match:
+            # Only action tag found
+            thinking = ""
+            action = action_match.group(1).strip()
+        else:
+            # Fallback: if no tags found, treat entire response as action
+            thinking = ""
+            action = response.strip()
+
+        return thinking, action
+
     def _send_message_to_llm(self, request: Request | None) -> str | None:
         """Send message to LLM and get response.
 
         LLMにメッセージを送信して応答を取得する.
+        COTが有効な場合、思考過程をログに記録し、アクション部分のみを返す.
 
         Args:
             request (Request | None): The request type to process / 処理するリクエストタイプ
 
         Returns:
-            str | None: LLM response or None if error occurred / LLMの応答またはエラー時はNone
+            str | None: LLM response (action only if COT enabled) or None if error occurred
+                        LLMの応答（COT有効時はアクション部分のみ）またはエラー時はNone
         """
         if request is None:
             return None
@@ -197,12 +283,23 @@ class Agent:
             self.llm_message_history.append(HumanMessage(content=prompt))
             response = (self.llm_model | StrOutputParser()).invoke(self.llm_message_history)
             self.llm_message_history.append(AIMessage(content=response))
-            self.agent_logger.logger.info(["LLM", prompt, response])
+
+            # COT parsing: separate thinking from action
+            if self._is_cot_enabled():
+                thinking, action = self._parse_cot_response(response)
+                # Log COT to separate cot_logger (not in main agent log)
+                if self.cot_logger:
+                    if thinking:
+                        self.cot_logger.info(f"[THINKING] {request}\n{thinking}")
+                    self.cot_logger.info(f"[ACTION] {request}\n{action}")
+                    self.cot_logger.info(f"[FULL_RESPONSE]\n{response}\n{'='*50}")
+                return action
+            else:
+                self.agent_logger.logger.info(["LLM", prompt, response])
+                return response
         except Exception:
             self.agent_logger.logger.exception("Failed to send message to LLM")
             return None
-        else:
-            return response
 
     @timeout
     def name(self) -> str:

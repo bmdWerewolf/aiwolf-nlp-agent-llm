@@ -31,3 +31,5 @@ cp config/config.en.yml.example config/config.yml
 ## Others
 
 For details on execution methods, settings, and other information, please refer to [aiwolf-nlp-agent](https://github.com/aiwolfdial/aiwolf-nlp-agent).
+## docker command
+docker images   #view the available images
