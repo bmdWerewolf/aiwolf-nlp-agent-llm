@@ -1,4 +1,4 @@
-first run the multimode command below 
+first run the multimode command below. change the llm model to yours.
 
 # recommand
 $env:SERVER_CONFIG = "default_5_2Teams.yml"
@@ -81,3 +81,10 @@ docker-compose --env-file ./config/.env --profile multi up
 docker-compose --env-file ./config/.env --profile multi up 2>&1 | Tee-Object -FilePath ./docker-logs/$(Get-Date -Format "yyyyMMdd_HHmmss").log
 
 
+
+## manipulate log
+# basic(change the file to the specific)
+python src/utils/merge_cot_logs.py ./log/cot_log/20251216124818996
+
+# define the output file by yourself
+python src/utils/merge_cot_logs.py ./log/cot_log/20251216124818996 -o ./my_merged.log
