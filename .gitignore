@@ -278,7 +278,7 @@ config/config.yml
 .env.test
 .env.production
 #config
-config/
+#config/
 #.exe
 server/aiwolf-nlp-server-linux-amd64
 server/aiwolf-nlp-server-windows-amd64.exe

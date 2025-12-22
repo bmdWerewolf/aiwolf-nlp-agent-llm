@@ -1,0 +1,214 @@
+web_socket:
+  url: ws://host.docker.internal:8080/ws
+  token:
+  auto_reconnect: false
+
+agent:
+  num: 1
+  team: kanolab_1
+  kill_on_timeout: true
+
+llm:
+  type: openai
+  sleep_time: 3
+
+openai:
+  model: openai/gpt-3.5-turbo
+  temperature: 0.7
+  base_url: https://openrouter.ai/api/v1
+  api_key: ${OPENAI_API_KEY}
+
+google:
+  model: gemini-2.0-flash-lite
+  temperature: 0.7
+
+ollama:
+  model: llama3
+  temperature: 0.7
+  base_url: http://localhost:11434
+
+prompt:
+  initialize: |-
+    You are playing a digital version of the social deduction game Werewolf (also known as Mafia).
+
+    ROLES:
+    - 1 Werewolf, 1 Possessed (supports the Werewolf),1 Seer, 2 Villagers
+
+    GAME FLOW:
+    - Night: Werewolf attacks. Seer divines one player. Possessed has no night action.
+    - Day: Players talk, then vote to execute one player.
+
+    WIN CONDITIONS:
+    - Village (Seer + Villagers) wins if the Werewolf dies.
+    - Werewolf team (Werewolf + Possessed) wins if they reach parity with the village.
+
+    Your name is {{ info.agent }}.
+    Your assigned role is {{ role.value }}.
+
+    RESPONSE RULES:
+    - For TALK or WHISPER:
+      Output only your in-game statement. End with "Over" when finished.
+    - For VOTE / DIVINE / ATTACK:
+      Output ONLY ONE agent name.
+
+    {% if info.profile is not none %}
+    Profile: {{ info.profile }}
+    {% endif %}
+
+    Send only content intended for the game. Do not include analysis or explanations.
+
+  daily_initialize: |-
+    Day start
+    Day {{ info.day }}
+
+    {% if info.medium_result %}
+    Medium result: {{ info.medium_result }}
+    {% endif %}
+    {% if info.divine_result %}
+    Divine result: {{ info.divine_result }}
+    {% endif %}
+    {% if info.executed_agent %}
+    Executed: {{ info.executed_agent }}
+    {% endif %}
+    {% if info.attacked_agent %}
+    Attacked: {{ info.attacked_agent }}
+    {% endif %}
+    {% if info.vote_list %}
+    Vote result: {{ info.vote_list }}
+    {% endif %}
+    {% if info.attack_vote_list %}
+    Night attack votes: {{ info.attack_vote_list }}
+    {% endif %}
+
+  whisper: |-
+    Whisper request
+    Whisper history:
+    {% for w in whisper_history[sent_whisper_count:] %}
+    {{ w.agent }}: {{ w.text }}
+    {% endfor %}
+
+  talk: |-
+    Talk request
+    Talk history:
+    {% for w in talk_history[sent_talk_count:] %}
+    {{ w.agent }}: {{ w.text }}
+    {% endfor %}
+
+    For the chance to speak next you will place a bid. Highest bidder speaks first.
+
+    BID OPTIONS:
+    0: I will observe for now.
+    1: I have a general thought to share.
+    2: I have something important and specific to say.
+    3: It is urgent for me to speak next.
+    4: Someone addressed me directly and I must respond.
+
+    INSTRUCTIONS:
+    - Think and act strategically as {{ info.agent }} the {{ role.value }}.
+    - Speak only when your contribution meaningfully influences the discussion.
+    - Avoid being excessively silent or overly vocal.
+    - Don't output your bid options, Speak normaly.
+
+    {% if role == 'Werewolf' -%}
+    - Guide the discussion subtly toward confusion, misdirection, or mistrust among Villagers.
+    - Use silence carefully; too much may draw suspicion, too little may expose you.
+    {% else -%}
+    - If the debate becomes unproductive, help redirect it.
+    - If you are suspected or your role is implicated, prioritize responding.
+    - Share insights or accusations carefully—doing so may expose you to danger.
+    {% endif %}
+
+    IMPORTANT: Max 150 characters. Make it concise and purposeful.
+
+  daily_finish: |-
+    Day end
+    Recent talk history:
+    {% for w in talk_history[sent_talk_count:] %}
+    {{ w.agent }}: {{ w.text }}
+    {% endfor %}
+
+    Day {{ info.day }} summary:
+    {% if info.medium_result %}
+    Medium result: {{ info.medium_result }}
+    {% endif %}
+    {% if info.divine_result %}
+    Divine result: {{ info.divine_result }}
+    {% endif %}
+    {% if info.executed_agent %}
+    Executed: {{ info.executed_agent }}
+    {% endif %}
+    {% if info.attacked_agent %}
+    Attacked: {{ info.attacked_agent }}
+    {% endif %}
+    {% if info.vote_list %}
+    Vote result: {{ info.vote_list }}
+    {% endif %}
+    {% if info.attack_vote_list %}
+    Attack vote result: {{ info.attack_vote_list }}
+    {% endif %}
+
+  divine: |-
+    DIVINE REQUEST (SEER only)
+    Choose ONE player to inspect tonight.
+    You will learn whether they are a werewolf.
+
+    Available targets:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}
+    {% endfor %}
+
+    OUTPUT: Only the agent name, nothing else.
+
+  guard: |-
+    GUARD REQUEST (BODYGUARD only)
+    Choose ONE player to protect tonight.
+
+    Available targets:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' %}
+    - {{ k }}
+    {% endfor %}
+
+    OUTPUT: Only the agent name.
+
+  vote: |-
+    VOTE REQUEST
+    Choose one player to execute.
+    - Leave output empty to abstain.
+    - Self-vote allowed.
+
+    Available targets:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' %}
+    - {{ k }}
+    {% endfor %}
+
+    OUTPUT: Only the agent name.
+
+  attack: |-
+    ATTACK REQUEST (WEREWOLF only)
+    Choose ONE player to attack tonight.
+
+    Targets:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}
+    {% endfor %}
+
+    OUTPUT: Only the agent name.
+
+log:
+  console_output: true
+  file_output: true
+  output_dir: ./log
+  level: debug
+
+  request:
+    name: false
+    initialize: false
+    daily_initialize: false
+    whisper: true
+    talk: true
+    daily_finish: false
+    divine: true
+    guard: true
+    vote: true
+    attack: true
+    finish: false
