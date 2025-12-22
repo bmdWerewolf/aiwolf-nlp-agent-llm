@@ -1,6 +1,7 @@
-first run the multimode command below. change the llm model to yours.
+# Quick Start
+## first run the multimode command below. change the llm model to yours.
 
-# recommand
+### recommand
 $env:SERVER_CONFIG = "default_5_2Teams.yml"
 $env:CONFIG_FILE1 = "./config/config_cot_example.yml"
 $env:CONFIG_FILE2 = "./config/config_cot_example_2.yml"
@@ -14,8 +15,14 @@ $env:AGENT_CONFIG_2 = "config_opr_multi_2.yml"
 
 docker-compose --env-file ./config/.env --profile multi up
 
+## then use merge_cot_log to merge logs.  --html means get a web page. -o means the output path.
+Usage:
+    python src/utils/merge_cot_logs.py ./log/cot_log/20251216124818996
+    python src/utils/merge_cot_logs.py ./log/cot_log/20251216124818996 --html
+    python src/utils/merge_cot_logs.py ./log/cot_log/20251216124818996 -o merged.log
 
-# here is a sop when you encountered problems. and remember change all the specific files to your own version.
+
+# here is a sop when you encountered problems with docker. and remember change all the specific files to your own version.
 # run all locally
 ./server/aiwolf-nlp-server-windows-amd64.exe -c ./server/default_5.yml
 python src/main.py -c ./config/config_opr_local.yml
@@ -82,9 +89,4 @@ docker-compose --env-file ./config/.env --profile multi up 2>&1 | Tee-Object -Fi
 
 
 
-## manipulate log
-# basic(change the file to the specific)
-python src/utils/merge_cot_logs.py ./log/cot_log/20251216124818996
 
-# define the output file by yourself
-python src/utils/merge_cot_logs.py ./log/cot_log/20251216124818996 -o ./my_merged.log
