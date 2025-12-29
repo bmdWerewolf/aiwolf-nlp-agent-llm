@@ -276,6 +276,34 @@ class Agent:
         }
         template: Template = Template(prompt)
         prompt = template.render(**key).strip()
+
+        # Colab
+        if self.config["llm"]["type"] == "colab":
+            try:
+                import requests
+                response = requests.post(self.colab_url, json={"prompt": prompt})
+                response.raise_for_status()
+                res_text = response.json()["text"]
+                
+                # COT有効時は思考とアクションを分離する
+                if self._is_cot_enabled():
+                    thinking, action = self._parse_cot_response(res_text)
+                    # COT専用ロガーに記録
+                    if self.cot_logger:
+                        if thinking:
+                            self.cot_logger.info(f"[THINKING] {request}\n{thinking}")
+                        self.cot_logger.info(f"[ACTION] {request}\n{action}")
+                        self.cot_logger.info(f"[FULL_RESPONSE]\n{res_text}\n{'='*50}")
+                    # タグを取り除いた「アクション（発言）」部分のみを返す
+                    return action
+                else:
+                    # COT無効時はそのままログに記録して返す
+                    self.agent_logger.logger.info(["LLM", prompt, res_text])
+                    return res_text
+            except Exception:
+                self.agent_logger.logger.exception("Failed to send message to LLM")
+            return None
+
         if self.llm_model is None:
             self.agent_logger.logger.error("LLM is not initialized")
             return None
@@ -321,6 +349,9 @@ class Agent:
             return
 
         model_type = str(self.config["llm"]["type"])
+
+        self.colab_url = os.getenv("COLAB_URL", "http://localhost:8000/generate")
+
         match model_type:
             case "openai":
                 openai_kwargs: dict[str, Any] = {
@@ -343,11 +374,14 @@ class Agent:
                     temperature=float(self.config["ollama"]["temperature"]),
                     base_url=str(self.config["ollama"]["base_url"]),
                 )
+            case "colab":
+                self.llm_model = None
             case _:
                 raise ValueError(model_type, "Unknown LLM type")
         
         # Log the model being used
-        model_name = str(self.config[model_type]["model"])
+        # # Ensure logging doesn't fail even if the model_type (e.g., "colab") is not defined in the config file
+        model_name = self.config.get(model_type, {}).get("model", "colab-llm")
         self.agent_logger.logger.info(["MODEL_INIT", f"type={model_type}", f"model={model_name}"])
         
         self._send_message_to_llm(self.request)

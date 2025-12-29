@@ -1,0 +1,130 @@
+web_socket:
+  url: ws://host.docker.internal:8080/ws
+  token:
+  auto_reconnect: false
+
+agent:
+  num: 5
+  team: bmd
+  kill_on_timeout: true
+
+llm:
+  type: "colab"
+  model: "llm-jp-1.3b"
+  # .envのCOLAB_URLを読み込む設定
+  base_url: ${COLAB_URL}
+  sleep_time: 3
+
+# COT (Chain of Thought) 設定
+# 思考プロセスを分離して出力させる
+cot:
+  enabled: true
+
+openai:
+  model: openai/gpt-3.5-turbo
+  temperature: 0.7
+  base_url: https://openrouter.ai/api/v1
+  api_key: ${OPENAI_API_KEY}
+
+google:
+  model: gemini-2.0-flash-lite
+  temperature: 0.7
+  api_key: ${GOOGLE_API_KEY}
+
+ollama:
+  model: llama3.1
+  temperature: 0.7
+  base_url: http://localhost:11434
+
+prompt:
+  initialize: |-
+    ### 指示
+    あなたは人狼ゲームの参加者 {{ info.agent }} です。
+    役職は {{ role.value }} です。
+
+    ### 出力形式（厳守）
+    <thinking>
+    (状況の短い分析)
+    </thinking>
+    <action>
+    (実際の発言や行動)
+    </action>
+
+    ※これ以外の余計な解説は一切書かないでください。
+
+  talk: |-
+    ### ルール
+    あなたは人狼ゲームの参加者です。
+    以下の「出力例」を参考にして、一言だけ発言してください。
+
+    ### 出力例
+    <thinking>
+    誰が人狼か分析します。
+    </thinking>
+    <action>
+    私は村人です。信じてください。 Over
+    </action>
+
+    ### これまでの会話
+    {% for w in talk_history[sent_talk_count:] -%}
+    {{ w.agent }}: {{ w.text }}
+    {% endfor %}
+
+    ### あなたの発言（{{ role.value }}として）
+
+  daily_initialize: |-
+    {{ info.day }} 日目が開始されました。
+    昨日の結果：
+    霊媒：{{ info.medium_result }}, 占い：{{ info.divine_result }}, 追放：{{ info.executed_agent }}, 襲撃：{{ info.attacked_agent }}
+
+    <thinking>本日の戦略を15文字以内で記述</thinking>
+    <action>準備完了</action>
+
+  # 投票や占いなども同様にタグ形式を徹底させる
+  vote: |-
+    ### 命令
+    追放する対象を1名選んでください。
+    生存者：{% for k, v in info.status_map.items() -%}{%- if v == 'ALIVE' -%}{{ k }}, {% endif -%}{%- endfor %}
+
+    <thinking>怪しい人物を記述</thinking>
+    <action>{{ k }}</action>
+
+  # (divine, guard, attack, daily_finish も同様に <thinking><action> 形式に統一してください)
+  divine: |-
+    占う対象を1名選んでください。
+    生存者：{% for k, v in info.status_map.items() -%}{%- if v == 'ALIVE' and k != info.agent -%}{{ k }}, {% endif -%}{%- endfor %}
+    <thinking>占い先を選択</thinking>
+    <action>{{ k }}</action>
+
+  attack: |-
+    襲撃対象を選んでください。
+    <thinking>襲撃先を選択</thinking>
+    <action>{{ k }}</action>
+
+  guard: |-
+    護衛対象を選んでください。
+    <thinking>護衛先を選択</thinking>
+    <action>{{ k }}</action>
+
+  daily_finish: |-
+    一日の終わりです。状況を整理してください。
+    <thinking>今日の振り返り</thinking>
+    <action>終了</action>
+
+log:
+  console_output: true
+  file_output: true
+  output_dir: ./log
+  level: debug
+  request:
+    name: false
+    initialize: false
+    daily_initialize: false
+    whisper: true
+    talk: true
+    daily_finish: false
+    divine: true
+    guard: true
+    vote: true
+    attack: true
+    finish: false

@@ -111,6 +111,13 @@ def connect(config: dict[str, Any], idx: int = 1) -> None:
         config (dict[str, Any]): Configuration dictionary / 設定辞書
         idx (int): Agent index (default: 1) / エージェントインデックス (デフォルト: 1)
     """
+
+    # 1番目は0秒、2番目は2秒、3番目は4秒... と待機させる
+    wait_time = (idx - 1) * 2
+    if wait_time > 0:
+        logger.info("エージェント %d は接続まで %d 秒待機します...", idx, wait_time)
+        sleep(wait_time)
+        
     name = str(config["agent"]["team"]) + str(idx)
     while True:
         try:
