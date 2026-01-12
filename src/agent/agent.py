@@ -29,6 +29,8 @@ if TYPE_CHECKING:
 from aiwolf_nlp_common.packet import Info, Packet, Request, Role, Setting, Status, Talk
 
 from utils.agent_logger import AgentLogger
+from utils.memory import create_memory
+from utils.memory.base import BaseMemory
 from utils.stoppable_thread import StoppableThread
 
 if TYPE_CHECKING:
@@ -76,12 +78,23 @@ class Agent:
         self.llm_model: BaseChatModel | None = None
         self.llm_message_history: list[BaseMessage] = []
 
+        # Memory management system
+        self.memory: BaseMemory | None = None
+        self.memory_logger: logging.Logger | None = None
+        
+        # Track first successful LLM API call
+        self._first_llm_call_success: bool = False
+
         load_dotenv(Path(__file__).parent.joinpath("./../../config/.env"))
 
         # Initialize COT (Chain of Thought) logger - separate from main agent logger
         self.cot_logger: logging.Logger | None = None
         if self._is_cot_enabled():
             self._init_cot_logger(game_id)
+
+        # Initialize Memory logger if memory is enabled
+        if self._get_memory_type() != 0:
+            self._init_memory_logger(game_id)
 
     @staticmethod
     def timeout(func: Callable[P, T]) -> Callable[P, T]:
@@ -147,13 +160,24 @@ class Agent:
         if packet.setting:
             self.setting = packet.setting
         if packet.talk_history:
+            # Add new talks to memory
+            if self.memory:
+                for talk in packet.talk_history:
+                    self.memory.add_talk(talk)
             self.talk_history.extend(packet.talk_history)
         if packet.whisper_history:
+            # Add new whispers to memory
+            if self.memory:
+                for whisper in packet.whisper_history:
+                    self.memory.add_talk(whisper)  # Whispers are also Talk objects
             self.whisper_history.extend(packet.whisper_history)
         if self.request == Request.INITIALIZE:
             self.talk_history = []
             self.whisper_history = []
             self.llm_message_history = []
+            # Clear memory for new game
+            if self.memory:
+                self.memory.clear()
         self.agent_logger.logger.debug(packet)
 
     def get_alive_agents(self) -> list[str]:
@@ -215,6 +239,56 @@ class Agent:
             handler.setFormatter(formatter)
             self.cot_logger.addHandler(handler)
 
+    def _get_memory_type(self) -> int:
+        """Get the memory type from config.
+
+        Returns:
+            int: Memory type (0-3)
+        """
+        return int(self.config.get("memory", {}).get("type", 0))
+
+    def _init_memory_logger(self, game_id: str) -> None:
+        """Initialize separate Memory logger for memory state tracking.
+
+        Memory専用のロガーを初期化する（メインログとは別ファイルに出力）.
+
+        Args:
+            game_id (str): Game ID for log file organization
+        """
+        from datetime import UTC, datetime
+        from ulid import ULID
+
+        memory_type = self._get_memory_type()
+        memory_type_names = {1: "rolling_summary", 2: "game_state", 3: "belief_reflexion"}
+        type_name = memory_type_names.get(memory_type, f"type_{memory_type}")
+
+        self.memory_logger = logging.getLogger(f"{self.agent_name}_memory")
+        self.memory_logger.setLevel(logging.INFO)
+        self.memory_logger.propagate = False
+
+        if bool(self.config["log"]["file_output"]):
+            ulid: ULID = ULID.from_str(game_id)
+            tz = datetime.now(UTC).astimezone().tzinfo
+            memory_output_dir = (
+                Path(str(self.config["log"]["output_dir"]))
+                / "memory_log"
+                / datetime.fromtimestamp(ulid.timestamp, tz=tz).strftime("%Y%m%d%H%M%S%f")[:-3]
+            )
+            memory_output_dir.mkdir(parents=True, exist_ok=True)
+
+            handler = logging.FileHandler(
+                memory_output_dir / f"{self.agent_name}_{type_name}.log",
+                mode="w",
+                encoding="utf-8",
+            )
+            formatter = logging.Formatter("%(asctime)s - %(name)s - %(message)s")
+            handler.setFormatter(formatter)
+            self.memory_logger.addHandler(handler)
+
+            # Log initial info
+            self.memory_logger.info(f"[INIT] Memory Type: {memory_type} ({type_name})")
+            self.memory_logger.info("=" * 60)
+
     def _parse_cot_response(self, response: str) -> tuple[str, str]:
         """Parse COT formatted response into thinking and action parts.
 
@@ -265,6 +339,12 @@ class Agent:
         prompt = self.config["prompt"][request.lower()]
         if float(self.config["llm"]["sleep_time"]) > 0:
             sleep(float(self.config["llm"]["sleep_time"]))
+
+        # Get memory context if memory is enabled
+        memory_context = ""
+        if self.memory:
+            memory_context = self.memory.get_memory_context()
+
         key = {
             "info": self.info,
             "setting": self.setting,
@@ -273,9 +353,14 @@ class Agent:
             "role": self.role,
             "sent_talk_count": self.sent_talk_count,
             "sent_whisper_count": self.sent_whisper_count,
+            "memory_context": memory_context,  # Add memory context to template vars
         }
         template: Template = Template(prompt)
         prompt = template.render(**key).strip()
+
+        # Prepend memory context to prompt if available and not empty
+        if memory_context:
+            prompt = f"{memory_context}\n\n{prompt}"
         if self.llm_model is None:
             self.agent_logger.logger.error("LLM is not initialized")
             return None
@@ -283,6 +368,21 @@ class Agent:
             self.llm_message_history.append(HumanMessage(content=prompt))
             response = (self.llm_model | StrOutputParser()).invoke(self.llm_message_history)
             self.llm_message_history.append(AIMessage(content=response))
+
+            # Log first successful API call
+            if not self._first_llm_call_success:
+                self._first_llm_call_success = True
+                model_type = str(self.config["llm"]["type"])
+                model_name = str(self.config[model_type]["model"])
+                base_url = self.config[model_type].get("base_url", "default")
+                self.agent_logger.logger.info("=" * 80)
+                self.agent_logger.logger.info("🎉 首次 LLM API 调用成功!")
+                self.agent_logger.logger.info(f"   模型类型: {model_type}")
+                self.agent_logger.logger.info(f"   模型名称: {model_name}")
+                self.agent_logger.logger.info(f"   API 地址: {base_url}")
+                self.agent_logger.logger.info(f"   请求类型: {request}")
+                self.agent_logger.logger.info(f"   响应长度: {len(response)} 字符")
+                self.agent_logger.logger.info("=" * 80)
 
             # COT parsing: separate thinking from action
             if self._is_cot_enabled():
@@ -345,18 +445,74 @@ class Agent:
                 )
             case _:
                 raise ValueError(model_type, "Unknown LLM type")
-        
+
         # Log the model being used
         model_name = str(self.config[model_type]["model"])
         self.agent_logger.logger.info(["MODEL_INIT", f"type={model_type}", f"model={model_name}"])
-        
+
+        # Initialize memory management system
+        self._init_memory()
+
         self._send_message_to_llm(self.request)
+
+    def _init_memory(self) -> None:
+        """Initialize the memory management system.
+
+        メモリ管理システムを初期化する.
+        """
+        memory_type = int(self.config.get("memory", {}).get("type", 0))
+        # Create memory instance (factory handles all types)
+        self.memory = create_memory(self.config, self.llm_model, self.agent_name)
+
+        self.agent_logger.logger.info(["MEMORY_INIT", f"type={memory_type}"])
+
+        # Pass memory_logger to memory instance if available
+        if self.memory and self.memory_logger:
+            self.memory.set_logger(self.memory_logger)
+
+        # Initialize memory with game info if available
+        self._update_memory_with_game_info()
+
+    def _update_memory_with_game_info(self) -> None:
+        """Update memory with current game state information.
+
+        現在のゲーム状態情報でメモリを更新する.
+        """
+        if not self.memory or not self.info:
+            return
+
+        # For GameStateMemory, update with game info
+        from utils.memory.game_state import GameStateMemory
+        if isinstance(self.memory, GameStateMemory):
+            alive = [k for k, v in self.info.status_map.items() if v == Status.ALIVE]
+            dead = [k for k, v in self.info.status_map.items() if v != Status.ALIVE]
+            divine_result = str(self.info.divine_result) if self.info.divine_result else None
+            executed = str(self.info.executed_agent) if self.info.executed_agent else None
+            attacked = str(self.info.attacked_agent) if self.info.attacked_agent else None
+            self.memory.update_from_game_info(
+                alive_players=alive,
+                dead_players=dead,
+                current_day=self.info.day,
+                divine_result=divine_result,
+                executed_agent=executed,
+                attacked_agent=attacked,
+            )
+
+        # For BeliefReflexionMemory, initialize players and role
+        from utils.memory.belief_reflexion import BeliefReflexionMemory
+        if isinstance(self.memory, BeliefReflexionMemory):
+            all_players = list(self.info.status_map.keys())
+            self.memory.initialize_players(all_players)
+            self.memory.set_my_role(self.role.value if self.role else "UNKNOWN")
 
     def daily_initialize(self) -> None:
         """Perform processing for daily initialization request.
 
         昼開始リクエストに対する処理を行う.
         """
+        # Update memory with new day's game state
+        self._update_memory_with_game_info()
+
         self._send_message_to_llm(self.request)
 
     def whisper(self) -> str:
@@ -389,6 +545,25 @@ class Agent:
         昼終了リクエストに対する処理を行う.
         """
         self._send_message_to_llm(self.request)
+
+        # Process turn-end memory updates
+        if self.memory and self.info:
+            events = {
+                "day": self.info.day,
+                "executed": str(self.info.executed_agent) if self.info.executed_agent else None,
+                "attacked": str(self.info.attacked_agent) if self.info.attacked_agent else None,
+                "divine_result": str(self.info.divine_result) if self.info.divine_result else None,
+                "medium_result": str(self.info.medium_result) if self.info.medium_result else None,
+            }
+            self.memory.on_turn_end(events)
+
+            # Log memory state after turn-end processing
+            if self.memory_logger:
+                self.memory_logger.info(f"[DAY_END] Day {self.info.day}")
+                self.memory_logger.info(f"[EVENTS] {events}")
+                memory_context = self.memory.get_memory_context()
+                self.memory_logger.info(f"[MEMORY_STATE]\n{memory_context}")
+                self.memory_logger.info("=" * 60)
 
     def divine(self) -> str:
         """Return response to divine request.

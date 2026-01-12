@@ -1,0 +1,282 @@
+﻿web_socket:
+  url: ws://host.docker.internal:8080/ws
+  token:
+  auto_reconnect: false
+
+agent:
+  num: 1
+  team: agentB
+  kill_on_timeout: true
+
+llm:
+  type: openai
+  sleep_time: 3
+
+# COT (Chain of Thought) 设置
+# 启用后，LLM 会输出思维过程，但只有行动部分会发送给服务器
+# 思维过程会保留在本地日志中，方便分析 AI 决策
+cot:
+  enabled: true
+
+# Memory Management 设置
+# type: 0 = 不使用记忆管理 (原始行为)
+#       1 = Rolling Semantic Summary (滚动语义摘要)
+#       2 = Structured Game State (结构化游戏状态)
+#       3 = Belief + Reflexion (信念+反思)
+memory:
+  type: 2
+  rolling_summary:
+    buffer_size: 5 # 保留的最近消息数量
+  game_state:
+    suspicion_decay: 0.1 # 怀疑度衰减率
+  belief_reflexion:
+    reflexion_interval: 1 # 每N个回合运行一次反思
+
+openai:
+  model: x-ai/grok-4.1-fast
+  temperature: 0.7
+  base_url: https://openrouter.ai/api/v1
+  api_key: ${OPENAI_API_KEY}
+
+google:
+  model: gemini-2.0-flash-lite
+  temperature: 0.7
+
+ollama:
+  model: llama3.1:8b
+  temperature: 0.7
+  base_url: http://host.docker.internal:11434
+
+prompt:
+  initialize: |-
+    You are playing a digital version of the social deduction game Werewolf (also known as Mafia).
+
+    ROLES:
+    - 1 Werewolf, 1 Possessed (supports the Werewolf),1 Seer, 2 Villagers
+
+    GAME FLOW:
+    - Night: Werewolf attacks. Seer divines one player. Possessed has no night action.
+    - Day: Players talk, then vote to execute one player.
+
+    WIN CONDITIONS:
+    - Village (Seer + Villagers) wins if the Werewolf dies.
+    - Werewolf team (Werewolf + Possessed) wins if they reach parity with the village.
+
+    Your name is {{ info.agent }}.
+    Your assigned role is {{ role.value }}.
+
+    IMPORTANT - RESPONSE FORMAT:
+    You MUST use the following format for ALL responses:
+    <thinking>
+    [Your private reasoning - analyze the situation, consider options, explain your strategy]
+    </thinking>
+    <action>
+    [Your actual response that will be sent to the game]
+    </action>
+
+    The <thinking> part is PRIVATE and will NOT be shown to other players.
+    Only the <action> part will be sent to the game.
+
+    {% if info.profile is not none %}
+    Profile: {{ info.profile }}
+    {% endif %}
+
+  daily_initialize: |-
+    Day start
+    Day {{ info.day }}
+
+    {% if info.medium_result %}
+    Medium result: {{ info.medium_result }}
+    {% endif %}
+    {% if info.divine_result %}
+    Divine result: {{ info.divine_result }}
+    {% endif %}
+    {% if info.executed_agent %}
+    Executed: {{ info.executed_agent }}
+    {% endif %}
+    {% if info.attacked_agent %}
+    Attacked: {{ info.attacked_agent }}
+    {% endif %}
+    {% if info.vote_list %}
+    Vote result: {{ info.vote_list }}
+    {% endif %}
+    {% if info.attack_vote_list %}
+    Night attack votes: {{ info.attack_vote_list }}
+    {% endif %}
+
+    Remember to use <thinking>...</thinking><action>...</action> format.
+
+  whisper: |-
+    Whisper request (Werewolf private chat)
+    Whisper history:
+    {% for w in whisper_history[sent_whisper_count:] %}
+    {{ w.agent }}: {{ w.text }}
+    {% endfor %}
+
+    Format your response as:
+    <thinking>
+    [Analyze the situation, plan strategy with fellow werewolves]
+    </thinking>
+    <action>
+    [Your whisper message - what you say to other werewolves]
+    </action>
+
+  talk: |-
+    Talk request
+    Talk history:
+    {% for w in talk_history[sent_talk_count:] %}
+    {{ w.agent }}: {{ w.text }}
+    {% endfor %}
+
+    You are {{ info.agent }} the {{ role.value }}.
+
+    For the chance to speak next you will place a bid. Highest bidder speaks first.
+
+    BID OPTIONS:
+    0: I will observe for now.
+    1: I have a general thought to share.
+    2: I have something important and specific to say.
+    3: It is urgent for me to speak next.
+    4: Someone addressed me directly and I must respond.
+
+    INSTRUCTIONS:
+    - Think and act strategically as {{ info.agent }} the {{ role.value }}.
+    - Speak only when your contribution meaningfully influences the discussion.
+    - Avoid being excessively silent or overly vocal.
+    - Don't output your bid options, Speak normally.
+
+    {% if role.value == 'WEREWOLF' -%}
+    - Guide the discussion subtly toward confusion, misdirection, or mistrust among Villagers.
+    - Use silence carefully; too much may draw suspicion, too little may expose you.
+    {% elif role.value == 'SEER' -%}
+    - If you are suspected or your role is implicated, prioritize responding.
+    - Consider when to reveal your divine results strategically.
+    {% elif role.value == 'POSSESSED' -%}
+    - Help the werewolf without being obvious.
+    - Consider fake-claiming seer if it would cause confusion.
+    {% else -%}
+    - If the debate becomes unproductive, help redirect it.
+    - If you are suspected or your role is implicated, prioritize responding.
+    - Share insights or accusations carefully—doing so may expose you to danger.
+    {% endif %}
+
+    Format your response as:
+    <thinking>
+    [Private reasoning: What do I know? What are others saying? Who is suspicious? What should I say or hide?]
+    </thinking>
+    <action>
+    [Your public statement - max 150 characters. Say "Over" to end your turn.]
+    </action>
+
+  daily_finish: |-
+    Day end - summarize today's events
+    Recent talk history:
+    {% for w in talk_history[sent_talk_count:] %}
+    {{ w.agent }}: {{ w.text }}
+    {% endfor %}
+
+    Day {{ info.day }} summary:
+    {% if info.executed_agent %}
+    Executed: {{ info.executed_agent }}
+    {% endif %}
+
+    <thinking>
+    [Reflect on today's discussion. What did I learn? Who became more/less suspicious?]
+    </thinking>
+    <action>
+    [Brief acknowledgment or "Over"]
+    </action>
+
+  divine: |-
+    DIVINE REQUEST (SEER only)
+    Choose ONE player to inspect tonight.
+    You will learn whether they are a werewolf.
+
+    Available targets:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}
+    {% endfor %}
+
+    <thinking>
+    [Who is most suspicious? Who would give me the most valuable information?]
+    [Consider: Who has been quiet? Who is accusing others aggressively? Who might be the werewolf?]
+    </thinking>
+    <action>
+    [Output ONLY the agent name, nothing else]
+    </action>
+
+  guard: |-
+    GUARD REQUEST (BODYGUARD only)
+    Choose ONE player to protect tonight.
+
+    Available targets:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' %}
+    - {{ k }}
+    {% endfor %}
+
+    <thinking>
+    [Who is most likely to be attacked by the werewolf tonight?]
+    [Consider: Who claimed seer? Who is leading the village? Who is most valuable?]
+    </thinking>
+    <action>
+    [Output ONLY the agent name]
+    </action>
+
+  vote: |-
+    VOTE REQUEST
+    Choose one player to execute.
+
+    Available targets:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' %}
+    - {{ k }}
+    {% endfor %}
+
+    <thinking>
+    [Analyze each candidate:]
+    {% for k, v in info.status_map.items() if v == 'ALIVE' %}
+    - {{ k }}: [What did they say? Are they suspicious? What's my read on them?]
+    {% endfor %}
+    [Final decision and reasoning:]
+    </thinking>
+    <action>
+    [Output ONLY the agent name]
+    </action>
+
+  attack: |-
+    ATTACK REQUEST (WEREWOLF only)
+    Choose ONE player to attack tonight.
+
+    Targets:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}
+    {% endfor %}
+
+    <thinking>
+    [Strategic analysis:]
+    - Who is most dangerous to me? (Seer who might have found me?)
+    - Who is leading the village against werewolves?
+    - Who would be least suspicious if killed?
+    - Should I avoid killing someone to frame them later?
+    </thinking>
+    <action>
+    [Output ONLY the agent name]
+    </action>
+
+log:
+  console_output: true
+  file_output: true
+  output_dir: ./log
+  level: debug
+
+  request:
+    name: false
+    initialize: false
+    daily_initialize: false
+    whisper: true
+    talk: true
+    daily_finish: false
+    divine: true
+    guard: true
+    vote: true
+    attack: true
+    finish: false
