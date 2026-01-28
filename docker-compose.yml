@@ -109,4 +109,4 @@ services:
         max-size: "10m"
         max-file: "3"
     # Multiple config files - main.py supports nargs="+"
-    command: uv run python src/main.py -c ${CONFIG_FILE1:-./config/config_opr_multi_1.yml} ${CONFIG_FILE2:-./config/config_opr_multi_2.yml}
+    command: uv run python src/main.py -c ./config/${CONFIG_FILE1:-config_opr_multi_1.yml} ./config/${CONFIG_FILE2:-config_opr_multi_2.yml}
