@@ -5,6 +5,9 @@
   "idx_team_map": {
     "0": "team_A_1x",
     "1": "team_A_2x",
+    "10": "team_B_7x",
+    "11": "team_B_8x",
+    "12": "team_B_9x",
     "2": "team_A_3x",
     "3": "team_A_4x",
     "4": "team_B_1x",
@@ -12,10 +15,7 @@
     "6": "team_B_3x",
     "7": "team_B_4x",
     "8": "team_B_5x",
-    "9": "team_B_6x",
-    "10": "team_B_7x",
-    "11": "team_B_8x",
-    "12": "team_B_9x"
+    "9": "team_B_6x"
   },
   "role_num_map": {
     "BODYGUARD": 1,
@@ -25,151 +25,113 @@
     "VILLAGER": 6,
     "WEREWOLF": 3
   },
-  "ended_matches": [],
+  "ended_matches": [
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    },
+    {
+      "BODYGUARD": [11],
+      "MEDIUM": [12],
+      "POSSESSED": [3],
+      "SEER": [4],
+      "VILLAGER": [5, 6, 7, 8, 9, 10],
+      "WEREWOLF": [0, 1, 2]
+    }
+  ],
   "scheduled_matches": [
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
-    {
-      "role_idxs": {
-        "BODYGUARD": [11],
-        "MEDIUM": [12],
-        "POSSESSED": [3],
-        "SEER": [4],
-        "VILLAGER": [5, 6, 7, 8, 9, 10],
-        "WEREWOLF": [0, 1, 2]
-      },
-      "weight": 1
-    },
     {
       "role_idxs": {
         "BODYGUARD": [11],

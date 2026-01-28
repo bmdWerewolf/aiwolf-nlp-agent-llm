@@ -276,18 +276,18 @@ custom_profile:
 
 json_logger:
   enable: true
-  output_dir: ./log/log_13player/json
+  output_dir: ./log/log_13player_wolf-plain_villager-cot/json
   filename: "{timestamp}_{teams}"
 
 game_logger:
   enable: true
-  output_dir: ./log/log_13player/game
+  output_dir: ./log/log_13player_wolf-plain_villager-cot/game
   filename: "{timestamp}_{teams}"
 
 realtime_broadcaster:
   enable: true
   delay: 5s
-  output_dir: ./log/log_13player/realtime
+  output_dir: ./log/log_13player_wolf-plain_villager-cot/realtime
   filename: "{timestamp}_{teams}"
 
 tts_broadcaster:

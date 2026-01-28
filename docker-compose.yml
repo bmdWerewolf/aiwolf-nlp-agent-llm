@@ -26,9 +26,8 @@ services:
     build:
       context: ./server
       dockerfile: Dockerfile
-    container_name: aiwolf-server
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:8080"
     volumes:
       # Config files mount (changes take effect immediately, no rebuild needed)
       - ./server:/app/config
@@ -58,7 +57,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: aiwolf-agent
     profiles: ["single", "default"]
     depends_on:
       server:
@@ -89,7 +87,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: aiwolf-agent-multi
     profiles: ["multi"]
     depends_on:
       server:

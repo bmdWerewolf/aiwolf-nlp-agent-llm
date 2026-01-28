@@ -4,7 +4,7 @@ web_socket:
   auto_reconnect: true
 
 agent:
-  num: 8
+  num: 9
   team: team_B
   kill_on_timeout: false
 
