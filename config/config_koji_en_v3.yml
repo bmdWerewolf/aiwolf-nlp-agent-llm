@@ -1,0 +1,494 @@
+web_socket:
+  url: ws://127.0.0.1:8080/ws
+  token:
+  auto_reconnect: false
+
+agent:
+  num: 5
+  team: bmd
+  kill_on_timeout: true
+
+llm:
+  type: openai
+  sleep_time: 1
+
+# Chain of Thought (思考の連鎖) 設定
+cot:
+  enabled: true
+
+# 記憶管理設定
+memory:
+  type: 0
+  rolling_summary:
+    buffer_size: 5
+  game_state:
+    suspicion_decay: 0.1
+  belief_reflexion:
+    reflexion_interval: 1
+
+openai:
+  model: "Qwen/Qwen2.5-72B-Instruct-AWQ"
+  temperature: 0.7
+  base_url: http://127.0.0.1:8000/v1
+  api_key: "dummy"
+  max_tokens: 2048
+
+google:
+  model: gemini-2.0-flash-lite
+  temperature: 0.7
+
+ollama:
+  model: qwen2.5:72b
+  temperature: 0.7
+  base_url: http://127.0.0.1:11434
+
+prompt:
+  initialize: |-
+    # 1. Basic Rule Settings
+    You are playing a digital match of the Werewolf game (Are You a Werewolf?).
+
+    Role Composition:
+    - 1 Werewolf, 1 Possessed (Werewolf Team), 1 Seer, 2 Villagers (Villager Team)
+
+    Game Flow:
+    - Night: The Werewolf attacks. The Seer divines one person. The Possessed has no night action.
+    - Day: All players discuss and vote to execute (exile) one person.
+
+    Victory Conditions:
+    - Villager Team: Win by executing the Werewolf.
+    - Werewolf Team: Win if half of the survivors belong to the Werewolf Team.
+
+    Game Participants:
+    {% for k, v in info.status_map.items() if v == 'ALIVE'%}
+    - {{ k }}
+    {% endfor %}
+
+    # 2. Your Identity
+    Name: {{ info.agent }}
+    Role: {{ role.value }}
+    Personality/Background: {{ info.profile }}
+    Please use an ending and tone of speech that reflects your personality.
+
+    # 3. Strategic Guidelines ({{ role.value }})
+    {% if role.value == 'WEREWOLF' -%}
+    - Skillfully guide the villagers into confusion and paranoia.
+    - Be mindful of the balance between silence and speaking to avoid suspicion.
+    {% elif role.value == 'SEER' -%}
+    - If you are suspected, prioritize defending yourself.
+    - Strategically decide when to reveal your divination results.
+    {% elif role.value == 'POSSESSED' -%}
+    - Support your fellow Werewolf teammate if they need help.
+    - Consider creating chaos by claiming to be a fake Seer.
+    {% else -%}
+    - Help steer the discussion if it stagnates.
+    - If suspected, calmly assert your innocence.
+    {% endif %}
+
+    ---
+    ### Current Phase: INITIALIZE
+    - Instruction: Do not speak here. Only formulate your strategy internally.
+    - Output: Please output <action>Over</action> to indicate you are ready.
+
+  daily_initialize: |-
+    # 1. Basic Rule Settings
+    You are playing a digital match of the Werewolf game (Are You a Werewolf?).
+
+    Role Composition:
+    - 1 Werewolf, 1 Possessed (Werewolf Team), 1 Seer, 2 Villagers (Villager Team)
+
+    Game Flow:
+    - Night: The Werewolf attacks. The Seer divines one person. The Possessed has no night action.
+    - Day: All players discuss and vote to execute (exile) one person.
+
+    Victory Conditions:
+    - Villager Team: Win by executing the Werewolf.
+    - Werewolf Team: Win if half of the survivors belong to the Werewolf Team.
+
+    Game Participants:
+    {% for k, v in info.status_map.items() if v == 'ALIVE'%}
+    - {{ k }}
+    {% endfor %}
+
+    # 2. Your Identity
+    Name: {{ info.agent }}
+    Role: {{ role.value }}
+    Personality/Background: {{ info.profile }}
+
+    # 3. Strategic Guidelines ({{ role.value }})
+    {% if role.value == 'WEREWOLF' -%}
+    - Skillfully guide the villagers into confusion and paranoia.
+    - Be mindful of the balance between silence and speaking to avoid suspicion.
+    {% elif role.value == 'SEER' -%}
+    - If you are suspected, prioritize defending yourself.
+    - Strategically decide when to reveal your divination results.
+    {% elif role.value == 'POSSESSED' -%}
+    - Support your fellow Werewolf teammate if they need help.
+    - Consider creating chaos by claiming to be a fake Seer.
+    {% else -%}
+    - Help steer the discussion if it stagnates.
+    - If suspected, calmly assert your innocence.
+    {% endif %}
+
+    ---
+    ### Current Phase: Discussion Initialization (DAILY_INITIALIZE)
+    {% if info.day == 0 %}
+    ## Game Start (Day 0)
+    The Werewolf game is about to begin. It is currently the morning of "Day 0."
+    No one has been executed yet, and there are no attack victims.
+    {% else %}
+    ## Morning of Day {{ info.day }}
+    Reporting the situation from last night to this morning.
+
+    {% if info.executed_agent %}・Yesterday's Exile: {{ info.executed_agent }}{% else %}・Yesterday Exile: None{% endif %}
+    {% if info.attacked_agent %}・Last Night's Attack Victim: {{ info.attacked_agent }}{% else %}・Last Night Attack Victim: None{% endif %}
+    {% if info.divine_result %}・Divination Result: {{ info.divine_result }}{% endif %}
+    {% if info.medium_result %}・Medium Result: {{ info.medium_result }}{% endif %}
+
+    {% if info.vote_list %}・Vote Breakdown: {{ info.vote_list }}{% endif %}
+    {% endif %}
+
+    ## Current Survivors:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' %}
+    - {{ k }}
+    {% endfor %}
+
+    ### Instructions
+    - Grasp the situation and prepare for discussion.
+    - Do not speak here yet.
+    - You must output <action>Over</action> and wait.
+
+  talk: |-
+    # 1. Basic Rule Settings
+    You are playing a digital match of the Werewolf game (Are You a Werewolf?).
+
+    Role Composition:
+    - 1 Werewolf, 1 Possessed (Werewolf Team), 1 Seer, 2 Villagers (Villager Team)
+
+    Game Flow:
+    - Night: The Werewolf attacks. The Seer divines one person. The Possessed has no night action.
+    - Day: All players discuss and vote to execute (exile) one person.
+
+    Victory Conditions:
+    - Villager Team: Win by executing the Werewolf.
+    - Werewolf Team: Win if half of the survivors belong to the Werewolf Team.
+
+    Game Participants:
+    {% for k, v in info.status_map.items() if v == 'ALIVE'%}
+    - {{ k }}
+    {% endfor %}
+
+    # 2. Your Identity
+    Name: {{ info.agent }}
+    Role: {{ role.value }}
+    Personality/Background: {{ info.profile }}
+
+    # 3. Strategic Guidelines ({{ role.value }})
+    {% if role.value == 'WEREWOLF' -%}
+    - Skillfully guide the villagers into confusion and paranoia.
+    - Be mindful of the balance between silence and speaking to avoid suspicion.
+    {% elif role.value == 'SEER' -%}
+    - If you are suspected, prioritize defending yourself.
+    - Strategically decide when to reveal your divination results.
+    {% elif role.value == 'POSSESSED' -%}
+    - Support your fellow Werewolf teammate if they need help.
+    - Consider creating chaos by claiming to be a fake Seer.
+    {% else -%}
+    - Help steer the discussion if it stagnates.
+    - If suspected, calmly assert your innocence.
+    {% endif %}
+
+    ---
+
+    ### Speech Request
+    Conversation history since the start of discussion:
+    {% if talk_history %}
+      {% for w in talk_history %}
+      {{ w.agent }}: {{ w.text }}
+      {% endfor %}
+    {% else %}
+      (There is no discussion yet. You are the first speaker.)
+    {% endif %}
+
+    ### Instructions
+    - Your speech will be broadcast to other agents as a continuation of this history.
+    - Speak in Japanese (or English, as appropriate for the match) using a tone that reflects your identity.
+    - You are now faced with the decision to either continue the discussion or end it (output Over). Think according to the following **[Discussion Criteria]**.
+
+    #### [Discussion Criteria]
+    1. **When to speak**:
+       - If you havent introduced yourself yet.
+       - If questions or suspicions are directed at you and you need to counter them.
+       - If there is new information to share with the village, such as divination results.
+       - If the discussion is stagnating and you want to present a new perspective.
+    2. **When to output Over**:
+       - If you have already finished your main points and are waiting for others reactions.
+       - If everyone has finished their introductions and you feel all materials for discussion have been presented.
+       - **If three or more people have consecutively output "Over" or "Skip" in the recent history.**
+
+    ### Output Format:
+    When there is something you want to say:
+    <thinking>
+    [What I, {{ info.agent }} ({{ role.value }}), should say based on the discussion]
+    </thinking>
+    <action>
+    [Actual speech content]
+    </action>
+
+    When there is no need to speak further:
+    <action>Over</action>
+
+    {% if info.day == 0 %}
+    #### Day 0 Special Rules
+    - **Once you have introduced yourself in the first speech, even if other people have started a discussion, please quickly issue <action>Over</action> to move on to the evenings action.**
+    {% endif %}
+
+    #### Speak in English!!! But agent names are in Japanese.
+
+  whisper: |-
+    # 1. Basic Rule Settings
+    You are playing a digital match of the Werewolf game (Are You a Werewolf?).
+
+    Role Composition:
+    - 1 Werewolf, 1 Possessed (Werewolf Team), 1 Seer, 2 Villagers (Villager Team)
+
+    Game Flow:
+    - Night: The Werewolf attacks. The Seer divines one person. The Possessed has no night action.
+    - Day: All players discuss and vote to execute (exile) one person.
+
+    Victory Conditions:
+    - Villager Team: Win by executing the Werewolf.
+    - Werewolf Team: Win if half of the survivors belong to the Werewolf Team.
+
+    Game Participants:
+    {% for k, v in info.status_map.items() if v == 'ALIVE'%}
+    - {{ k }}
+    {% endfor %}
+
+    # 2. Your Identity
+    Name: {{ info.agent }}
+    Role: {{ role.value }}
+    Personality/Background: {{ info.profile }}
+
+    # 3. Strategic Guidelines ({{ role.value }})
+    {% if role.value == 'WEREWOLF' -%}
+    - Skillfully guide the villagers into confusion and paranoia.
+    - Be mindful of the balance between silence and speaking to avoid suspicion.
+    {% elif role.value == 'SEER' -%}
+    - If you are suspected, prioritize defending yourself.
+    - Strategically decide when to reveal your divination results.
+    {% elif role.value == 'POSSESSED' -%}
+    - Support your fellow Werewolf teammate if they need help.
+    - Consider creating chaos by claiming to be a fake Seer.
+    {% else -%}
+    - Help steer the discussion if it stagnates.
+    - If suspected, calmly assert your innocence.
+    {% endif %}
+
+    ---
+
+    Werewolf Private Chat (Whisper)
+    Whisper history so far:
+    {% for w in whisper_history %}
+    {{ w.agent }}: {{ w.text }}
+    {% endfor %}
+
+    Instructions:
+    <thinking>Devise a strategy to coordinate with your fellow Werewolf.</thinking>
+    <action>[Message to your ally]</action>
+
+  daily_finish: |-
+    ### Please return only the following tag as plain text.
+    <action>Over</action>
+
+  divine: |-
+    # 1. Basic Rule Settings
+    You are playing a digital match of the Werewolf game (Are You a Werewolf?).
+
+    Role Composition:
+    - 1 Werewolf, 1 Possessed (Werewolf Team), 1 Seer, 2 Villagers (Villager Team)
+
+    Game Flow:
+    - Night: The Werewolf attacks. The Seer divines one person. The Possessed has no night action.
+    - Day: All players discuss and vote to execute (exile) one person.
+
+    Victory Conditions:
+    - Villager Team: Win by executing the Werewolf.
+    - Werewolf Team: Win if half of the survivors belong to the Werewolf Team.
+
+    Game Participants:
+    {% for k, v in info.status_map.items() if v == 'ALIVE'%}
+    - {{ k }}
+    {% endfor %}
+
+    # 2. Your Identity
+    Name: {{ info.agent }}
+    Role: {{ role.value }}
+    Personality/Background: {{ info.profile }}
+
+    # 3. Strategic Guidelines ({{ role.value }})
+    {% if role.value == 'WEREWOLF' -%}
+    - Skillfully guide the villagers into confusion and paranoia.
+    - Be mindful of the balance between silence and speaking to avoid suspicion.
+    {% elif role.value == 'SEER' -%}
+    - If you are suspected, prioritize defending yourself.
+    - Strategically decide when to reveal your divination results.
+    {% elif role.value == 'POSSESSED' -%}
+    - Support your fellow Werewolf teammate if they need help.
+    - Consider creating chaos by claiming to be a fake Seer.
+    {% else -%}
+    - Help steer the discussion if it stagnates.
+    - If suspected, calmly assert your innocence.
+    {% endif %}
+
+    ---
+
+    ### Divination Request (Seer Only)
+    Please select one person to divine tonight (to find out if they are a Werewolf or not).
+    Living targets other than yourself:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}
+    {% endfor %}
+
+    ### Output Format:
+    <thinking>
+    [Analysis of each candidate:]
+    {% for k, v in info.status_map.items() if v == 'ALIVE' %}
+    - {{ k }}: [Observation]
+    {% endfor %}
+    [Final reasoning for your decision:]
+    </thinking>
+    <action>[Output only the name of the target agent]</action>
+
+  vote: |-
+    # 1. Basic Rule Settings
+    You are playing a digital match of the Werewolf game (Are You a Werewolf?).
+
+    Role Composition:
+    - 1 Werewolf, 1 Possessed (Werewolf Team), 1 Seer, 2 Villagers (Villager Team)
+
+    Game Flow:
+    - Night: The Werewolf attacks. The Seer divines one person. The Possessed has no night action.
+    - Day: All players discuss and vote to execute (exile) one person.
+
+    Victory Conditions:
+    - Villager Team: Win by executing the Werewolf.
+    - Werewolf Team: Win if half of the survivors belong to the Werewolf Team.
+
+    Game Participants:
+    {% for k, v in info.status_map.items() if v == 'ALIVE'%}
+    - {{ k }}
+    {% endfor %}
+
+    # 2. Your Identity
+    Name: {{ info.agent }}
+    Role: {{ role.value }}
+    Personality/Background: {{ info.profile }}
+
+    # 3. Strategic Guidelines ({{ role.value }})
+    {% if role.value == 'WEREWOLF' -%}
+    - Skillfully guide the villagers into confusion and paranoia.
+    - Be mindful of the balance between silence and speaking to avoid suspicion.
+    {% elif role.value == 'SEER' -%}
+    - If you are suspected, prioritize defending yourself.
+    - Strategically decide when to reveal your divination results.
+    {% elif role.value == 'POSSESSED' -%}
+    - Support your fellow Werewolf teammate if they need help.
+    - Consider creating chaos by claiming to be a fake Seer.
+    {% else -%}
+    - Help steer the discussion if it stagnates.
+    - If suspected, calmly assert your innocence.
+    {% endif %}
+
+    ---
+
+    Vote Request
+    Please select one player you wish to exile (execute).
+
+    List of survivors other than yourself:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}
+    {% endfor %}
+
+    ### Output Format:
+    <thinking>
+    [Analysis of each candidate:]
+    {% for k, v in info.status_map.items() if v == 'ALIVE' %}
+    - {{ k }}: [Impression or observation]
+    {% endfor %}
+    [Reasoning for who should be executed:]
+    </thinking>
+    <action>[Output only the name of the target agent]</action>
+
+  attack: |-
+    # 1. Basic Rule Settings
+    You are playing a digital match of the Werewolf game (Are You a Werewolf?).
+
+    Role Composition:
+    - 1 Werewolf, 1 Possessed (Werewolf Team), 1 Seer, 2 Villagers (Villager Team)
+
+    Game Flow:
+    - Night: The Werewolf attacks. The Seer divines one person. The Possessed has no night action.
+    - Day: All players discuss and vote to execute (exile) one person.
+
+    Victory Conditions:
+    - Villager Team: Win by executing the Werewolf.
+    - Werewolf Team: Win if half of the survivors belong to the Werewolf Team.
+
+    Game Participants:
+    {% for k, v in info.status_map.items() if v == 'ALIVE'%}
+    - {{ k }}
+    {% endfor %}
+
+    # 2. Your Identity
+    Name: {{ info.agent }}
+    Role: {{ role.value }}
+    Personality/Background: {{ info.profile }}
+
+    # 3. Strategic Guidelines ({{ role.value }})
+    {% if role.value == 'WEREWOLF' -%}
+    - Skillfully guide the villagers into confusion and paranoia.
+    - Be mindful of the balance between silence and speaking to avoid suspicion.
+    {% elif role.value == 'SEER' -%}
+    - If you are suspected, prioritize defending yourself.
+    - Strategically decide when to reveal your divination results.
+    {% elif role.value == 'POSSESSED' -%}
+    - Support your fellow Werewolf teammate if they need help.
+    - Consider creating chaos by claiming to be a fake Seer.
+    {% else -%}
+    - Help steer the discussion if it stagnates.
+    - If suspected, calmly assert your innocence.
+    {% endif %}
+
+    ---
+
+    Attack Request (Werewolf Only)
+    Please select one player to attack tonight.
+
+    Living targets other than yourself:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}
+    {% endfor %}
+
+    ### Output Format:
+    <thinking>
+    [Strategic analysis]
+    </thinking>
+    <action>[Output only the name of the target agent]</action>
+
+log:
+  console_output: true
+  file_output: true
+  output_dir: ./log
+  level: debug
+  request:
+    name: false
+    initialize: false
+    daily_initialize: false
+    whisper: true
+    talk: true
+    daily_finish: false
+    divine: true
+    guard: true
+    vote: true
+    attack: true
+    finish: false

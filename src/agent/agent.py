@@ -194,10 +194,51 @@ class Agent:
             self.agent_logger.logger.error("LLM is not initialized")
             return None
         try:
+<<<<<<< Updated upstream
             self.llm_message_history.append(HumanMessage(content=prompt))
             response = (self.llm_model | StrOutputParser()).invoke(self.llm_message_history)
             self.llm_message_history.append(AIMessage(content=response))
             self.agent_logger.logger.info(["LLM", prompt, response])
+=======
+            response = (self.llm_model | StrOutputParser()).invoke([HumanMessage(content=prompt)])
+
+            # LLMから返ってきた生のレスポンスを出力
+            print("\n" + "*"*40 + " [LLM OUTPUT START] " + "*"*40)
+            print(f"Request Type: {request}")
+            print(f"Agent Name: {self.agent_name}")
+            print("-" * 80)
+            print(response)
+            print("*"*40 + " [LLM OUTPUT END] " + "*"*40 + "\n")
+            
+            # Log first successful API call
+            if not self._first_llm_call_success:
+                self._first_llm_call_success = True
+                model_type = str(self.config["llm"]["type"])
+                model_name = str(self.config[model_type]["model"])
+                base_url = self.config[model_type].get("base_url", "default")
+                self.agent_logger.logger.info("=" * 80)
+                self.agent_logger.logger.info("🎉 首次 LLM API 调用成功!")
+                self.agent_logger.logger.info(f"   模型类型: {model_type}")
+                self.agent_logger.logger.info(f"   模型名称: {model_name}")
+                self.agent_logger.logger.info(f"   API 地址: {base_url}")
+                self.agent_logger.logger.info(f"   请求类型: {request}")
+                self.agent_logger.logger.info(f"   响应长度: {len(response)} 字符")
+                self.agent_logger.logger.info("=" * 80)
+
+            # COT parsing: separate thinking from action
+            if self._is_cot_enabled():
+                thinking, action = self._parse_cot_response(response)
+                # Log COT to separate cot_logger (not in main agent log)
+                if self.cot_logger:
+                    if thinking:
+                        self.cot_logger.info(f"[THINKING] {request}\n{thinking}")
+                    self.cot_logger.info(f"[ACTION] {request}\n{action}")
+                    self.cot_logger.info(f"[FULL_RESPONSE]\n{response}\n{'='*50}")
+                return action
+            else:
+                self.agent_logger.logger.info(["LLM", prompt, response])
+                return response
+>>>>>>> Stashed changes
         except Exception:
             self.agent_logger.logger.exception("Failed to send message to LLM")
             return None
