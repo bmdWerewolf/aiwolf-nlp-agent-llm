@@ -4,7 +4,7 @@ web_socket:
   auto_reconnect: false
 
 agent:
-  num: 5
+  num: 9
   team: bmd
   kill_on_timeout: true
 

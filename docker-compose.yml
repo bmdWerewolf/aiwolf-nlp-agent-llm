@@ -35,8 +35,8 @@ services:
       - ./server/logs:/app/log
     restart: unless-stopped
     # Dynamic server config selection via SERVER_CONFIG env variable
-    # Options: default_5.yml, default_5_2Teams.yml, default_13.yml
-    command: ["./aiwolf-nlp-server-linux-amd64", "-c", "./config/${SERVER_CONFIG:-default_5.yml}"]
+    # Options: default_5.yml, default_5_2Teams.yml, default_9.yml
+    command: ["./aiwolf-nlp-server-linux-amd64", "-c", "./config/${SERVER_CONFIG:-default_9.yml}"]
     logging:
       driver: "json-file"
       options:
@@ -76,7 +76,7 @@ services:
         max-size: "10m"
         max-file: "3"
     # Single config file
-    command: uv run python src/main.py -c ${CONFIG_FILE:-./config/config_opr.yml}
+    command: uv run python src/main.py -c ${CONFIG_FILE:-./config/config_koji_jp_v4.yml}
 
   # ==========================================
   # Multi Team Mode (--profile multi)
