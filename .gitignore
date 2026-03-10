@@ -281,10 +281,21 @@ config/config.yml
 #config/
 #.exe
 server/aiwolf-nlp-server-linux-amd64
+server/aiwolf-nlp-server-darwin-arm64
+server/aiwolf-nlp-server-darwin-amd64
 server/aiwolf-nlp-server-windows-amd64.exe
+aiwolf-nlp-server-*
 # Docker
 #logs
 log/
 /server/logs/
 # myNote
 command.md
+# Jupyter
+.ipynb_checkpoints/
+# PyTorch / vLLM cache
+root/
+torchinductor_root/
+# uv Linux binary
+uv-x86_64-unknown-linux-gnu/
+uv.tar.gz
