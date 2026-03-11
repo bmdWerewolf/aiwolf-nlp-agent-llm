@@ -98,112 +98,31 @@ from the model at every game phase:
 > This workflow is ideal for iterating on prompts in `config_gemini_jp.yml`
 > without rebuilding Docker on every change.
 
----
+**Switch to 5-player server**
 
-### A. Run with Docker (all-in-one)
-
-**① Start (server + all agents in one command)**
+Pass `SERVER_CONFIG` before the docker command:
 
 ```bash
-docker compose --profile single up --build
+SERVER_CONFIG=default_5.yml docker compose --env-file ./config/.env up --build
 ```
 
-Uses `default_9.yml` (9-player) and `config_gemini_jp.yml` (Google Gemini) by default.
+Also update `agent.num` in your config file to match:
 
-The agent container automatically connects to the server using `ws://server:8080/ws` (Docker internal hostname), regardless of the `url` setting in the config file.
+| Config file | `agent.num` |
+|-------------|-------------|
+| 9-player    | `9`         |
+| 5-player    | `5`         |
 
-**② Custom configuration**
-
-```bash
-# Switch to 5-player
-SERVER_CONFIG=default_5.yml docker compose --profile single up --build
-
-# Specify a different agent config
-CONFIG_FILE=./config/config_ollama_local_jp.yml docker compose --profile single up --build
-
-# Both at once
-SERVER_CONFIG=default_5.yml CONFIG_FILE=./config/config_ollama_local_jp.yml docker compose --profile single up --build
-```
-
-**③ Server only (connect agents separately)**
+**Switch agent config (e.g. Ollama instead of Gemini)**
 
 ```bash
-docker compose up --build
-```
-
-Then connect agents locally (see section B below).
-
-**④ View logs by service**
-
-```bash
-docker compose logs -f server   # server logs only
-docker compose logs -f agent    # agent logs only
-```
-
-> Logs are also written to `./log/` and `./server/logs/`.
-
----
-
-### B. Run locally
-
-**① Install dependencies**
-
-```bash
-uv sync
-```
-
-**② Download the server binary**
-
-macOS (Apple Silicon):
-```bash
-curl -L https://github.com/aiwolfdial/aiwolf-nlp-server/releases/latest/download/aiwolf-nlp-server-darwin-arm64 \
-  -o server/aiwolf-nlp-server-darwin-arm64
-chmod +x server/aiwolf-nlp-server-darwin-arm64
-```
-
-macOS (Intel):
-```bash
-curl -L https://github.com/aiwolfdial/aiwolf-nlp-server/releases/latest/download/aiwolf-nlp-server-darwin-amd64 \
-  -o server/aiwolf-nlp-server-darwin-amd64
-chmod +x server/aiwolf-nlp-server-darwin-amd64
-```
-
-> The server binary is gitignored — download it after cloning.
-
-**③ Start the game server (Terminal 1)**
-
-```bash
-# 9-player (default)
-./server/aiwolf-nlp-server-darwin-arm64 -c ./server/default_9.yml
-
-# 5-player
-./server/aiwolf-nlp-server-darwin-arm64 -c ./server/default_5.yml
-```
-
-**④ Start the agent (Terminal 2)**
-
-The config files use `ws://localhost:8080/ws` by default, which connects directly to the local server.
-
-```bash
-# Using Google Gemini API (production)
-uv run python src/main.py -c ./config/config_gemini_jp.yml
-
-# Using Ollama (local testing)
 uv run python src/main.py -c ./config/config_ollama_local_jp.yml
 ```
 
-> To override the WebSocket URL without editing the config file, set the `WS_URL` environment variable:
-> ```bash
-> WS_URL=ws://localhost:9999/ws uv run python src/main.py -c ./config/config_gemini_jp.yml
-> ```
-
-**For Ollama, set up in advance:**
+For Ollama, make sure the model is downloaded and the server is running first:
 
 ```bash
-# Download a model
 ollama pull phi3:mini
-
-# Start Ollama server before running the agent
 ollama serve
 ```
 
