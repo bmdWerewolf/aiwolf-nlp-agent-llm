@@ -1,37 +1,78 @@
-# aiwolf-nlp-agent-llm (bmd チーム)
+# aiwolf-nlp-agent-llm (bmd team)
 
-人狼知能コンテスト（自然言語部門）向けLLMエージェントです。
-**デフォルトは9人村。** 5人村への切り替えも可能です。
+LLM-based agent for the AIWolf NLP Contest (Natural Language Division).
+**Default configuration: 9-player game.** 5-player mode is also supported.
 
-## 前提条件
+## Prerequisites
 
-| ツール | バージョン | 備考 |
-|--------|-----------|------|
-| Python | 3.11以上 | |
-| [uv](https://docs.astral.sh/uv/) | 最新版 | パッケージ管理 |
-| LLM API | いずれか1つ | Google Gemini / OpenAI / Ollama |
+### For local execution
+
+| Tool | Version | Notes |
+|------|---------|-------|
+| Python | 3.11+ | |
+| [uv](https://docs.astral.sh/uv/) | Latest | Package manager |
+| LLM API | One of the following | Google Gemini / OpenAI / Ollama |
+
+### For Docker execution
+
+| Tool | Notes |
+|------|-------|
+| Docker / Docker Compose | |
+| LLM API key | Google Gemini or OpenAI |
 
 ---
 
-## セットアップ
+## Setup
 
 ```bash
-git clone <このリポジトリのURL>
+git clone <this-repository-url>
 cd aiwolf
 
-# 依存関係のインストール
-uv sync
-
-# APIキーの設定
+# Configure API key
 cp config/.env.example config/.env
-# config/.env を編集して使用するAPIキーを記入
+# Edit config/.env and fill in your API key
 ```
 
 ---
 
-## 実行方法
+## How to Run
 
-### ① サーバーバイナリのダウンロード
+### A. Run with Docker (recommended)
+
+**① Start**
+
+```bash
+docker compose up --build
+```
+
+Uses `default_9.yml` (9-player) and `config_koji_api.yml` (Google Gemini) by default.
+
+**② Custom configuration**
+
+```bash
+# Switch to 5-player
+SERVER_CONFIG=default_5.yml docker compose up --build
+
+# Specify a different agent config
+CONFIG_FILE=./config/config_koji_local.yml docker compose up --build
+
+# Both at once
+SERVER_CONFIG=default_5.yml CONFIG_FILE=./config/config_koji_local.yml docker compose up --build
+```
+
+> Logs are written to `./log/` and `./server/logs/`.
+
+---
+
+### B. Run locally
+
+**① Install dependencies**
+
+```bash
+uv sync
+```
+
+**② Download the server binary**
 
 macOS (Apple Silicon):
 ```bash
@@ -47,121 +88,91 @@ curl -L https://github.com/aiwolfdial/aiwolf-nlp-server/releases/latest/download
 chmod +x server/aiwolf-nlp-server-darwin-amd64
 ```
 
-> サーバーバイナリはgitignore対象のため、クローン後に各自ダウンロードしてください。
+> The server binary is gitignored — download it after cloning.
 
----
+**③ Start the game server (Terminal 1)**
 
-### ② ゲームサーバーを起動（ターミナル1）
-
-**9人村（デフォルト）:**
 ```bash
+# 9-player (default)
 ./server/aiwolf-nlp-server-darwin-arm64 -c ./server/default_9.yml
-```
 
-**5人村に切り替える場合:**
-```bash
+# 5-player
 ./server/aiwolf-nlp-server-darwin-arm64 -c ./server/default_5.yml
 ```
 
----
+**④ Start the agent (Terminal 2)**
 
-### ③ エージェントを起動（ターミナル2）
-
-**APIを使う場合（本番・高性能テスト）:**
 ```bash
-uv run python src/main.py -c ./config/config_koji_jp_v4.yml
-```
+# Using Google Gemini API (production)
+uv run python src/main.py -c ./config/config_koji_api.yml
 
-**Ollamaでローカルテストする場合:**
-
-事前に [Ollama](https://ollama.com) をインストールしてモデルをダウンロード:
-```bash
-ollama pull smollm2:135m   # 最軽量（動作確認用）
-ollama pull phi3:mini      # 性能重視
-```
-
-Ollamaサーバーを起動してからエージェントを実行:
-```bash
-# ターミナル1でOllama起動
-ollama serve
-
-# ターミナル2でサーバー起動
-./server/aiwolf-nlp-server-darwin-arm64 -c ./server/default_9.yml
-
-# ターミナル3でエージェント起動
+# Using Ollama (local testing)
 uv run python src/main.py -c ./config/config_koji_local.yml
 ```
 
----
+**For Ollama, set up in advance:**
 
-## 設定ファイル
+```bash
+# Download a model
+ollama pull phi3:mini
 
-### エージェント設定 (`config/`)
-
-| ファイル | 用途 |
-|---------|------|
-| `config_koji_jp_v4.yml` | **本番用**（Google Gemini API、9人村） |
-| `config_koji_local.yml` | **ローカルテスト用**（Ollama、9人村） |
-| `.env` | APIキー（gitignore対象・要作成） |
-| `.env.example` | APIキーのテンプレート |
-
-### サーバー設定 (`server/`)
-
-| ファイル | 用途 |
-|---------|------|
-| `default_9.yml` | **9人村**（デフォルト） |
-| `default_5.yml` | 5人村 |
-| `default_5_2Teams.yml` | 5人村・2チーム対戦用 |
+# Start Ollama server before running the agent
+ollama serve
+```
 
 ---
 
-## 5人村 ↔ 9人村 の切り替え
+## Configuration Files
 
-| 変更箇所 | 9人村 | 5人村 |
-|---------|-------|-------|
-| サーバー設定 | `default_9.yml` | `default_5.yml` |
-| `config_koji_jp_v4.yml` の `agent.num` | `9` | `5` |
-| `config_koji_local.yml` の `agent.num` | `9` | `5` |
+### Agent config (`config/`)
+
+| File | Purpose |
+|------|---------|
+| `config_koji_api.yml` | **Production** (Google Gemini API, 9-player) |
+| `config_koji_local.yml` | **Local testing** (Ollama) |
+| `.env` | API keys (gitignored — must be created) |
+| `.env.example` | API key template |
+
+### Server config (`server/`)
+
+| File | Purpose |
+|------|---------|
+| `default_9.yml` | **9-player** (default) |
+| `default_5.yml` | 5-player |
+| `default_5_2Teams.yml` | 5-player, 2-team match |
 
 ---
 
-## ディレクトリ構成
+## Switching between 5-player and 9-player
+
+| Setting | 9-player | 5-player |
+|---------|---------|---------|
+| Server config | `default_9.yml` | `default_5.yml` |
+| `agent.num` in `config_koji_api.yml` | `9` | `5` |
+| `agent.num` in `config_koji_local.yml` | `9` | `5` |
+
+---
+
+## Directory Structure
 
 ```
 aiwolf/
 ├── config/
-│   ├── config_koji_jp_v4.yml   # 本番用エージェント設定
-│   ├── config_koji_local.yml   # ローカルテスト用
-│   ├── .env                    # APIキー（要作成）
-│   └── .env.example            # APIキーテンプレート
+│   ├── config_koji_api.yml     # Production agent config
+│   ├── config_koji_local.yml   # Local testing config
+│   ├── .env                    # API keys (must be created)
+│   └── .env.example            # API key template
 ├── server/
-│   ├── default_9.yml           # 9人村サーバー設定
-│   ├── default_5.yml           # 5人村サーバー設定
-│   ├── default_5_2Teams.yml    # 2チーム対戦用
-│   └── Dockerfile              # サーバー用Docker
+│   ├── default_9.yml           # 9-player server config
+│   ├── default_5.yml           # 5-player server config
+│   ├── default_5_2Teams.yml    # 2-team match config
+│   └── Dockerfile              # Server Docker image
 ├── src/
-│   ├── main.py                 # エントリーポイント
-│   ├── starter.py              # 接続管理
-│   ├── agent/                  # エージェント実装
-│   └── utils/                  # ユーティリティ
-├── Dockerfile                  # エージェント用Docker
+│   ├── main.py                 # Entry point
+│   ├── starter.py              # Connection handler
+│   ├── agent/                  # Agent implementation
+│   └── utils/                  # Utilities
+├── Dockerfile                  # Agent Docker image
 ├── docker-compose.yml          # Docker Compose
-└── pyproject.toml              # 依存関係定義
-```
-
----
-
-## Docker での実行（オプション）
-
-```bash
-cp config/.env.example config/.env
-# config/.env を編集
-
-docker compose up --build
-```
-
-デフォルトで `default_9.yml` と `config_koji_jp_v4.yml` を使用します。
-環境変数で変更可能:
-```bash
-SERVER_CONFIG=default_5.yml CONFIG_FILE=./config/config_koji_local.yml docker compose up
+└── pyproject.toml              # Dependency definitions
 ```
