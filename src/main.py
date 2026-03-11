@@ -6,6 +6,7 @@
 import argparse
 import logging
 import multiprocessing
+import os
 from pathlib import Path
 
 import yaml
@@ -37,6 +38,11 @@ def execute(config_path: Path) -> None:
             print("Config loaded successfully")
             print(f"Config keys: {list(config.keys())}")
             logger.info("設定ファイルを読み込みました")
+
+        ws_url = os.environ.get("WS_URL")
+        if ws_url:
+            config["web_socket"]["url"] = ws_url
+            logger.info("WS_URL 環境変数でWebSocket URLを上書きしました: %s", ws_url)
 
         agent_num = int(config["agent"]["num"])
         print(f"Agent num: {agent_num}")

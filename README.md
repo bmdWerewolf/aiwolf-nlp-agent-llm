@@ -39,28 +39,45 @@ cp config/.env.example config/.env
 
 ### A. Run with Docker (recommended)
 
-**① Start**
+**① Start (server + all agents)**
 
 ```bash
-docker compose up --build
+docker compose --profile single up --build
 ```
 
 Uses `default_9.yml` (9-player) and `config_gemini_jp.yml` (Google Gemini) by default.
+
+The agent container automatically connects to the server using `ws://server:8080/ws` (Docker internal hostname), regardless of the `url` setting in the config file.
 
 **② Custom configuration**
 
 ```bash
 # Switch to 5-player
-SERVER_CONFIG=default_5.yml docker compose up --build
+SERVER_CONFIG=default_5.yml docker compose --profile single up --build
 
 # Specify a different agent config
-CONFIG_FILE=./config/config_ollama_local_jp.yml docker compose up --build
+CONFIG_FILE=./config/config_ollama_local_jp.yml docker compose --profile single up --build
 
 # Both at once
-SERVER_CONFIG=default_5.yml CONFIG_FILE=./config/config_ollama_local_jp.yml docker compose up --build
+SERVER_CONFIG=default_5.yml CONFIG_FILE=./config/config_ollama_local_jp.yml docker compose --profile single up --build
 ```
 
-> Logs are written to `./log/` and `./server/logs/`.
+**③ Server only (connect agents separately)**
+
+```bash
+docker compose up --build
+```
+
+Then connect agents locally (see section B below).
+
+**④ View logs by service**
+
+```bash
+docker compose logs -f server   # server logs only
+docker compose logs -f agent    # agent logs only
+```
+
+> Logs are also written to `./log/` and `./server/logs/`.
 
 ---
 
@@ -102,6 +119,8 @@ chmod +x server/aiwolf-nlp-server-darwin-amd64
 
 **④ Start the agent (Terminal 2)**
 
+The config files use `ws://localhost:8080/ws` by default, which connects directly to the local server.
+
 ```bash
 # Using Google Gemini API (production)
 uv run python src/main.py -c ./config/config_gemini_jp.yml
@@ -109,6 +128,11 @@ uv run python src/main.py -c ./config/config_gemini_jp.yml
 # Using Ollama (local testing)
 uv run python src/main.py -c ./config/config_ollama_local_jp.yml
 ```
+
+> To override the WebSocket URL without editing the config file, set the `WS_URL` environment variable:
+> ```bash
+> WS_URL=ws://localhost:9999/ws uv run python src/main.py -c ./config/config_gemini_jp.yml
+> ```
 
 **For Ollama, set up in advance:**
 
