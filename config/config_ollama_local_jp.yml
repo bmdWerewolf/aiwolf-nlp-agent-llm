@@ -43,7 +43,7 @@ ollama:
   base_url: http://127.0.0.1:11434
 
 prompt:
-  initialize: |-
+  system: |-
     # 1. 基本ルール設定
     あなたは人狼ゲーム（汝は人狼なりや？）のデジタル対戦をプレイしています。
 
@@ -84,8 +84,8 @@ prompt:
     - 疑われた場合は、冷静に身の潔白を主張してください。
     {% endif %}
 
-    ---
-    ### 今回のフェーズ: 初期化（INITIALIZE）
+  initialize: |-
+    ### フェーズ: INITIALIZE
     - 指示: ここでは発言しないでください。内部で戦略を立てるのみに留めてください。
     - 出力: <action>Over</action> を出力して準備完了としてください。
 
@@ -119,13 +119,14 @@ prompt:
 
   talk: |-
     ### 発言リクエスト
-    議論開始からこれまでの会話履歴:
-    {% if talk_history %}
-      {% for w in talk_history %}
+    前回以降の新着会話:
+    {% set new_talks = talk_history[sent_talk_count:] %}
+    {% if new_talks %}
+      {% for w in new_talks %}
       {{ w.agent }}: {{ w.text }}
       {% endfor %}
     {% else %}
-      （現在、まだ議論はありません。あなたが最初の発言者です。）
+      （新しい発言はありません。あなたが最初の発言者か、直前から変化なしです。）
     {% endif %}
 
     ### 指示
@@ -163,8 +164,9 @@ prompt:
 
   whisper: |-
     人狼専用チャット（囁き）
-    これまでの囁き履歴:
-    {% for w in whisper_history %}
+    前回以降の新着囁き:
+    {% set new_whispers = whisper_history[sent_whisper_count:] %}
+    {% for w in new_whispers %}
     {{ w.agent }}: {{ w.text }}
     {% endfor %}
 

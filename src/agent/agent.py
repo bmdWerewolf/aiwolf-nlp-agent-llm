@@ -7,13 +7,14 @@ from __future__ import annotations
 
 import os
 import random
+import re
 from pathlib import Path
 from time import sleep
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 from dotenv import load_dotenv
 from jinja2 import Template
-from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
@@ -193,16 +194,72 @@ class Agent:
         if self.llm_model is None:
             self.agent_logger.logger.error("LLM is not initialized")
             return None
-        try:
-            self.llm_message_history.append(HumanMessage(content=prompt))
-            response = (self.llm_model | StrOutputParser()).invoke(self.llm_message_history)
-            self.llm_message_history.append(AIMessage(content=response))
-            self.agent_logger.logger.info(["LLM", prompt, response])
-        except Exception:
-            self.agent_logger.logger.exception("Failed to send message to LLM")
+        max_retries = int(self.config.get("llm", {}).get("max_retries", 3))
+        for attempt in range(max_retries):
+            try:
+                self.llm_message_history.append(HumanMessage(content=prompt))
+                response = (self.llm_model | StrOutputParser()).invoke(self.llm_message_history)
+                self.llm_message_history.append(AIMessage(content=response))
+                label_map = {
+                    "SystemMessage": "⚙️  SYSTEM",
+                    "HumanMessage": "📋 指示",
+                    "AIMessage":    "🤖 応答",
+                }
+                history_parts = []
+                for msg in self.llm_message_history[:-2]:
+                    label = label_map.get(msg.__class__.__name__, msg.__class__.__name__)
+                    history_parts.append(f"  ┌─ {label} ─\n{msg.content}\n  └────────────────────────────────────────────────────")
+                history_lines = "\n\n".join(history_parts) if history_parts else "  (なし)"
+                self.agent_logger.logger.info(
+                    "\n"
+                    "╔══════════════════════════════════════════════════════╗\n"
+                    "║                    LLM CALL                         ║\n"
+                    "╠══════════════════════════════════════════════════════╣\n"
+                    "║  過去のやりとり (HISTORY)                              ║\n"
+                    "╚══════════════════════════════════════════════════════╝\n"
+                    "%s\n\n"
+                    "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
+                    "┃  ★ 現在のリクエスト (PROMPT)                           ┃\n"
+                    "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
+                    "%s\n\n"
+                    "┌──────────────────────────────────────────────────────┐\n"
+                    "│  LLM応答 (RESPONSE)                                  │\n"
+                    "└──────────────────────────────────────────────────────┘\n"
+                    "%s\n",
+                    history_lines,
+                    prompt,
+                    response,
+                )
+                return self._extract_action(response)
+            except Exception:
+                self.llm_message_history.pop()
+                self.agent_logger.logger.exception(
+                    "LLM呼び出しに失敗しました (試行 %d/%d)", attempt + 1, max_retries
+                )
+                if attempt < max_retries - 1:
+                    sleep(5)
+        return None
+
+    @staticmethod
+    def _extract_action(response: str | None) -> str | None:
+        """Extract content from <action>...</action> tag.
+
+        Args:
+            response (str | None): LLM response / LLMの応答
+
+        Returns:
+            str | None: Extracted action content / 抽出されたアクション内容
+        """
+        if response is None:
             return None
-        else:
-            return response
+        match = re.search(r"<action>(.*?)</action>", response, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+        # 閉じタグなしのケース: <action>content (LLMが</action>を省略した場合)
+        match = re.search(r"<action>(.+)", response, re.DOTALL)
+        if match:
+            return match.group(1).strip()
+        return response
 
     @timeout
     def name(self) -> str:
@@ -246,6 +303,14 @@ class Agent:
             case _:
                 raise ValueError(model_type, "Unknown LLM type")
         self.llm_model = self.llm_model
+        if "system" in self.config["prompt"]:
+            key = {
+                "info": self.info,
+                "setting": self.setting,
+                "role": self.role,
+            }
+            system_prompt = Template(self.config["prompt"]["system"]).render(**key).strip()
+            self.llm_message_history = [SystemMessage(content=system_prompt)]
         self._send_message_to_llm(self.request)
 
     def daily_initialize(self) -> None:
