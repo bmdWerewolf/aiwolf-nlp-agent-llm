@@ -45,7 +45,7 @@ cp config/.env.example config/.env
 docker compose up --build
 ```
 
-Uses `default_9.yml` (9-player) and `config_koji_api.yml` (Google Gemini) by default.
+Uses `default_9.yml` (9-player) and `config_gemini_jp.yml` (Google Gemini) by default.
 
 **② Custom configuration**
 
@@ -54,10 +54,10 @@ Uses `default_9.yml` (9-player) and `config_koji_api.yml` (Google Gemini) by def
 SERVER_CONFIG=default_5.yml docker compose up --build
 
 # Specify a different agent config
-CONFIG_FILE=./config/config_koji_local.yml docker compose up --build
+CONFIG_FILE=./config/config_ollama_local_jp.yml docker compose up --build
 
 # Both at once
-SERVER_CONFIG=default_5.yml CONFIG_FILE=./config/config_koji_local.yml docker compose up --build
+SERVER_CONFIG=default_5.yml CONFIG_FILE=./config/config_ollama_local_jp.yml docker compose up --build
 ```
 
 > Logs are written to `./log/` and `./server/logs/`.
@@ -104,10 +104,10 @@ chmod +x server/aiwolf-nlp-server-darwin-amd64
 
 ```bash
 # Using Google Gemini API (production)
-uv run python src/main.py -c ./config/config_koji_api.yml
+uv run python src/main.py -c ./config/config_gemini_jp.yml
 
 # Using Ollama (local testing)
-uv run python src/main.py -c ./config/config_koji_local.yml
+uv run python src/main.py -c ./config/config_ollama_local_jp.yml
 ```
 
 **For Ollama, set up in advance:**
@@ -128,8 +128,8 @@ ollama serve
 
 | File | Purpose |
 |------|---------|
-| `config_koji_api.yml` | **Production** (Google Gemini API, 9-player) |
-| `config_koji_local.yml` | **Local testing** (Ollama) |
+| `config_gemini_jp.yml` | **Production** (Google Gemini API, 9-player) |
+| `config_ollama_local_jp.yml` | **Local testing** (Ollama) |
 | `.env` | API keys (gitignored — must be created) |
 | `.env.example` | API key template |
 
@@ -148,8 +148,8 @@ ollama serve
 | Setting | 9-player | 5-player |
 |---------|---------|---------|
 | Server config | `default_9.yml` | `default_5.yml` |
-| `agent.num` in `config_koji_api.yml` | `9` | `5` |
-| `agent.num` in `config_koji_local.yml` | `9` | `5` |
+| `agent.num` in `config_gemini_jp.yml` | `9` | `5` |
+| `agent.num` in `config_ollama_local_jp.yml` | `9` | `5` |
 
 ---
 
@@ -158,8 +158,8 @@ ollama serve
 ```
 aiwolf/
 ├── config/
-│   ├── config_koji_api.yml     # Production agent config
-│   ├── config_koji_local.yml   # Local testing config
+│   ├── config_gemini_jp.yml     # Production agent config
+│   ├── config_ollama_local_jp.yml   # Local testing config
 │   ├── .env                    # API keys (must be created)
 │   └── .env.example            # API key template
 ├── server/

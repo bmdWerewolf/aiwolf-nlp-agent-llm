@@ -76,7 +76,7 @@ services:
         max-size: "10m"
         max-file: "3"
     # Single config file
-    command: uv run python src/main.py -c ${CONFIG_FILE:-./config/config_koji_api.yml}
+    command: uv run python src/main.py -c ${CONFIG_FILE:-./config/config_gemini_jp.yml}
 
   # ==========================================
   # Multi Team Mode (--profile multi)
