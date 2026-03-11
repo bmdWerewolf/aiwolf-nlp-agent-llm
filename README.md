@@ -37,9 +37,72 @@ cp config/.env.example config/.env
 
 ## How to Run
 
-### A. Run with Docker (recommended)
+### ⭐ Recommended: API-based development workflow
 
-**① Start (server + all agents)**
+The best way to develop and tune prompts is to run the game server via Docker
+and connect the agent directly from your terminal. This gives you full
+visibility into what the LLM receives and outputs in real time.
+
+**Terminal 1 — Start the game server**
+
+```bash
+docker compose --env-file ./config/.env up --build
+```
+
+This starts only the game server (port 8080). No agents are connected yet.
+
+**Terminal 2 — Start the agent and observe LLM I/O**
+
+```bash
+uv run python src/main.py -c ./config/config_gemini_jp.yml
+```
+
+Running the agent locally (outside Docker) prints structured LLM logs
+directly to the terminal, so you can see exactly what is sent to and received
+from the model at every game phase:
+
+```
+╔══════════════════════════════════════════════════════╗
+║                    LLM CALL                         ║
+╠══════════════════════════════════════════════════════╣
+║  過去のやりとり (HISTORY)                              ║
+╚══════════════════════════════════════════════════════╝
+  ┌─ ⚙️  SYSTEM ─
+  (rules · identity · strategy — sent once, persists throughout the game)
+  └────────────────────────────────────────────────────
+
+  ┌─ 📋 指示 ─
+  ### Phase: DAILY_INITIALIZE ...
+  └────────────────────────────────────────────────────
+
+  ┌─ 🤖 応答 ─
+  <action>Over</action>
+  └────────────────────────────────────────────────────
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃  ★ 現在のリクエスト (PROMPT)                           ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+### Phase: TALK
+新着会話: ...
+
+┌──────────────────────────────────────────────────────┐
+│  LLM応答 (RESPONSE)                                  │
+└──────────────────────────────────────────────────────┘
+<action>こんにちは。私はアスカです。</action>
+```
+
+- **HISTORY** shows all past exchanges (system context + prior phase turns)
+- **★ PROMPT** is what the model is actually being asked right now
+- **RESPONSE** is the raw output before action extraction
+
+> This workflow is ideal for iterating on prompts in `config_gemini_jp.yml`
+> without rebuilding Docker on every change.
+
+---
+
+### A. Run with Docker (all-in-one)
+
+**① Start (server + all agents in one command)**
 
 ```bash
 docker compose --profile single up --build
