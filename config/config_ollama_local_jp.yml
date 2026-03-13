@@ -48,10 +48,10 @@ prompt:
     あなたは人狼ゲーム（汝は人狼なりや？）のデジタル対戦をプレイしています。
 
     役職構成:
-    - 人狼 1, 狂人 1 (人狼陣営), 占い師 1, 村人 2 (村人陣営)
+    - 人狼 2, 狂人 1 (人狼陣営), 占い師 1, 霊媒師 1, 狩人 1, 村人 3 (村人陣営)
 
     ゲームの流れ:
-    - 夜: 人狼が襲撃します。占い師は一人を占います。狂人は夜のアクションを持ちません。
+    - 夜: 人狼が襲撃します。占い師は一人を占います。霊媒師は処刑された人が人狼かどうかを知ります。狩人は一人を護衛します。狂人は夜のアクションを持ちません。
     - 昼: プレイヤー全員で議論し、一人を処刑（追放）するために投票します。
 
     勝利条件:
@@ -73,31 +73,42 @@ prompt:
     {% if role.value == 'WEREWOLF' -%}
     - 村人たちを混乱や疑心暗鬼に陥れるよう、巧みに誘導してください。
     - 沈黙と発言のバランスに注意し、疑われないように立ち回ってください。
+    - 仲間の人狼と囁きで連携し、同じ村人を狙わないよう調整してください。
     {% elif role.value == 'SEER' -%}
     - 自分が疑われた場合は、優先的に反論してください。
     - 占い結果をいつ公開するか、戦略的に判断してください。
+    - 人狼だと判明した場合は積極的に情報共有し、村人を処刑から守ってください。
+    {% elif role.value == 'MEDIUM' -%}
+    - 処刑されたプレイヤーの霊媒結果（人狼かどうか）を村に共有してください。
+    - 霊媒師を騙る偽者（狂人など）に注意し、自分の信憑性を示す根拠を持ってください。
+    - 霊媒結果から人狼候補を絞り込み、投票の方向性を示してください。
+    {% elif role.value == 'BODYGUARD' -%}
+    - 占い師や霊媒師など重要な役職を護衛することを優先してください。
+    - 誰を護衛したかは公開しないほうが戦略上有利です。
+    - 人狼に狙われやすいプレイヤーを観察し、護衛対象を毎夜見直してください。
     {% elif role.value == 'POSSESSED' -%}
     - ヘルプが必要な仲間の人狼をサポートしてください。
-    - 偽の占い師を名乗る（騙る）など、混乱を引き起こすことも検討してください。
+    - 偽の占い師や霊媒師を名乗る（騙る）など、混乱を引き起こすことも検討してください。
     {% else -%}
     - 議論が停滞しているなら、方向性を修正する手助けをしてください。
     - 疑われた場合は、冷静に身の潔白を主張してください。
+    - 占い師・霊媒師の情報を積極的に活用し、投票先を絞り込んでください。
     {% endif %}
 
   initialize: |-
-    ### フェーズ: INITIALIZE
-    - 指示: ここでは発言しないでください。内部で戦略を立てるのみに留めてください。
+    ### フェーズ: 初期化
+    - 指示: ここでは発言しないでください。
     - 出力: <action>Over</action> を出力して準備完了としてください。
 
   daily_initialize: |-
-    ### 今回のフェーズ: 議論開始の初期化（DAILY_INITIALIZE）
     {% if info.day == 0 %}
-    ## ゲーム開始（0日目）
-    いよいよ人狼ゲームが始まります。現在は「0日目」の朝です。
-    まだ誰も処刑されておらず、襲撃の被害者もいません。
+    ### フェーズ: 0日目の始まり
+    - 指示: ここでは発言しないでください。
+    - 出力: <action>Over</action> を出力して準備完了としてください。
+
     {% else %}
+    フェーズ: 昨夜から今朝にかけての状況報告
     ## {{ info.day }} 日目の朝
-    昨夜から今朝にかけての状況を報告します。
 
     {% if info.executed_agent %}・昨日の追放者: {{ info.executed_agent }}{% else %}・昨日の追放者: なし{% endif %}
     {% if info.attacked_agent %}・昨夜の襲撃被害: {{ info.attacked_agent }}{% else %}・昨夜の襲撃被害: なし{% endif %}
@@ -105,12 +116,12 @@ prompt:
     {% if info.medium_result %}・霊媒結果: {{ info.medium_result }}{% endif %}
 
     {% if info.vote_list %}・投票内訳: {{ info.vote_list }}{% endif %}
-    {% endif %}
 
     ## 現在の生存者:
     {% for k, v in info.status_map.items() if v == 'ALIVE' %}
     - {{ k }}
     {% endfor %}
+    {% endif %}
 
     ### 指示
     - 状況を把握し、議論の準備を整えてください。
@@ -118,32 +129,41 @@ prompt:
     - 必ず <action>Over</action> と出力して待機してください。
 
   talk: |-
-    ### 発言リクエスト
-    前回以降の新着会話:
+    ### フェーズ: 議論への発言                                                                                                                                                                                                                                                                                                                                          
+    {% set my_today_count = talk_history | selectattr('day', 'equalto', info.day) | selectattr('agent', 'equalto', info.agent) | list | length %}                                                                                                                                                                                                                                                       
+
+    {% if info.day == 0 and my_today_count == 0 %}                                                                                                                                                        
+    ### 指示: 0日目・1回目の発言                                                                                                                                                                          
+    - これからゲームが始まります。ゲーム参加者に挨拶と自己紹介をしてください。 
+    - ただし、人狼ゲームの自分の役職に関する情報はまだ隠しておくこと。                                                                                                                                                                 
+    - 出力形式:
+    <thinking>
+    [私のアイデンティティから、どのような口調や語尾にすべきか]
+    </thinking>
+    <action>
+    [実際の挨拶内容]
+    </action>                                                                                                                                                  
+                                                                                                                                                                                                            
+    {% elif info.day == 0 and my_today_count >= 1 %}                                                                                                                                                      
+    ### 指示: 0日目・2回目以降                                                                                                                                                                            
+    - これ以上発言する必要はありません。                                                                                                                                                                  
+    - 必ず <action>Over</action> とだけ出力してください。
+
+    {% elif info.day == 1 and my_today_count == 0 %}
+    ### ゲームが開始されました。
     {% set new_talks = talk_history[sent_talk_count:] %}
-    {% if new_talks %}
-      {% for w in new_talks %}
-      {{ w.agent }}: {{ w.text }}
-      {% endfor %}
+    {% if not new_talks %}
+    まだ誰も発言していません。
     {% else %}
-      （新しい発言はありません。あなたが最初の発言者か、直前から変化なしです。）
+    すでに以下の議論がなされています。
+    {% for w in new_talks %}
+    {{ w.agent }}: {{ w.text }}
+    {% endfor %}
     {% endif %}
 
     ### 指示
     - あなたの発言はこの続きとして他エージェントに発信されます。
-    - あなたのアイデンティティを生かした口調の日本語で会話してください。
-    - 今、議論を続けるか、終了させる（Overを出す）かの判断を迫られています。以下の**【議論の判断基準】**に従って思考してください。
-
-    #### 【議論の判断基準】
-    1. **発言すべき時**:
-       - まだ自己紹介をしていない場合。
-       - 他者から質問や疑いを向けられ、反論が必要な場合。
-       - 占い師として結果を出すなど、村に共有すべき新しい情報がある場合。
-       - 議論が停滞しており、新しい視点を提示したい場合。
-    2. **Overを出すべき時**:
-       - 既に自分の主張を終え、他者の反応を待つフェーズである場合。
-       - 全員が自己紹介を終え、議論の材料が出尽くしたと感じる場合。
-       - **履歴の直近で3人以上が連続して「Over」や「Skip」を出している場合。**
+    - 戦略ガイドラインを参考に、以下の出力形式に則って出力してください。
 
     ### 出力形式:
     発言したい内容がある時:
@@ -157,28 +177,109 @@ prompt:
     これ以上発言する必要がない時:
     <action>Over</action>
 
-    {% if info.day == 0 %}
-    #### 0日目特別ルール
-    - **自己紹介を終えたら、速やかに <action>Over</action> を出して夜のアクションへ移行させてください。**
+    {% else %}
+    ### 発言リクエスト ({{ info.day }}日目での発言)
+
+    前回以降の新着会話:
+    {% set new_talks = talk_history[sent_talk_count:] %}
+    {% if new_talks %}
+      {% for w in new_talks %}
+      {{ w.agent }}: {{ w.text }}
+      {% endfor %}
+    {% else %}
+      （新しい発言はありません。）
+    {% endif %}
+
+    ### 指示
+    - あなたの発言はこの続きとして他エージェントに発信されます。
+    - 戦略ガイドラインを参考に、以下の出力形式に則って出力してください。
+
+    ### 出力形式:
+    発言したい内容がある時:
+    <thinking>
+    [議論からわかる私{{ info.agent }}（{{ role.value }}）が発言すべき内容]
+    </thinking>
+    <action>
+    [実際の発言内容]
+    </action>
+
+    これ以上発言する必要がない時:
+    <action>Over</action>
     {% endif %}
 
   whisper: |-
-    人狼専用チャット（囁き）
+    ### フェーズ: 人狼同士の囁き会話
+    {% set my_today_whisper_count = whisper_history | selectattr('day', 'equalto', info.day) | selectattr('agent', 'equalto', info.agent) | list | length %}
+
+    {% if info.day == 0 and my_today_whisper_count == 0 %}
+    ### 指示: 0日目・1回目の囁き（自己紹介前）
+    - まだゲームが始まっていません。ここでは囁かないでください。
+    - 必ず <action>Over</action> とだけ出力してください。
+
+    {% elif info.day == 0 and my_today_whisper_count == 1 %}
+    ### 指示: 0日目・2回目の囁き（自己紹介後）
+    - 自己紹介フェーズが終わりました。仲間の人狼と1日目以降の戦略を相談してください。
+    - 誰を最初に狙うか、誰に成りすますかなど、初期方針を決めてください。
+
     前回以降の新着囁き:
     {% set new_whispers = whisper_history[sent_whisper_count:] %}
-    {% for w in new_whispers %}
-    {{ w.agent }}: {{ w.text }}
-    {% endfor %}
+    {% if new_whispers %}
+      {% for w in new_whispers %}
+      {{ w.agent }}: {{ w.text }}
+      {% endfor %}
+    {% else %}
+      （新しい囁きはありません。あなたが最初の発言者です。）
+    {% endif %}
 
-    指示:
-    <thinking>仲間の人狼と連携するための戦略を練ってください。</thinking>
-    <action>[仲間へのメッセージ]</action>
+    ### 出力形式:
+    <thinking>
+    [1日目以降に向けた初期戦略]
+    </thinking>
+    <action>
+    [仲間へのメッセージ]
+    </action>
+
+    {% elif info.day == 0 %}
+    - 必ず <action>Over</action> とだけ出力してください。
+
+    {% else %}
+    ### 囁きリクエスト ({{ info.day }}日目での囁き)
+
+    前回以降の新着囁き:
+    {% set new_whispers = whisper_history[sent_whisper_count:] %}
+    {% if new_whispers %}
+      {% for w in new_whispers %}
+      {{ w.agent }}: {{ w.text }}
+      {% endfor %}
+    {% else %}
+      （新しい囁きはありません。）
+    {% endif %}
+
+    ### 指示
+    - 昼の議論を踏まえ、仲間の人狼と戦略を調整してください。
+    - 誰を次の標的にするか、誰を庇うかなどを相談してください。
+
+    ### 出力形式:
+    囁きたい内容がある時:
+    <thinking>
+    [仲間の人狼と共有すべき戦略・情報]
+    </thinking>
+    <action>
+    [仲間へのメッセージ]
+    </action>
+
+    これ以上囁く必要がない時:
+    <action>Over</action>
+    {% endif %}
 
   daily_finish: |-
-    ### 以下のタグのみをプレーンテキストで返してください。
-    <action>Over</action>
+    ### フェーズ: 1日の終わり
+    - 指示: ここでは発言しないでください。
+    - 出力: <action>Over</action> を出力して準備完了としてください。
 
   divine: |-
+    ### フェーズ: 占い
+
     ### 占いリクエスト (占い師専用)
     今夜占う(人狼かそうでないかがわかる)対象を一人選んでください。
     自分以外の生存している対象:
@@ -197,6 +298,8 @@ prompt:
     <action>[対象のエージェント名のみを出力]</action>
 
   vote: |-
+    ### フェーズ: VOTE
+
     投票リクエスト
     追放（処刑）したいプレイヤーを一人選んでください。
 
@@ -216,10 +319,12 @@ prompt:
     <action>[対象のエージェント名のみを出力]</action>
 
   attack: |-
+    ### フェーズ: 人狼の襲撃
+
     襲撃リクエスト (人狼専用)
     今夜襲撃するプレイヤーを一人選んでください。
 
-    自分以外の生存している対象:
+    生存している村人陣営の対象:
     {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
     - {{ k }}
     {% endfor %}
