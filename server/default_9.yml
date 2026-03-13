@@ -8,8 +8,8 @@ server:
   authentication:
     enable: false
   timeout:
-    action: 180s
-    response: 240s
+    action: 360s
+    response: 480s
     acceptable: 5s
   max_continue_error_ratio: 0.2
 
@@ -19,8 +19,8 @@ game:
   vote_visibility: false
   talk:
     max_count:
-      per_agent: 8
-      per_day: 72
+      per_agent: 4
+      per_day: 36
     max_length:
       count_in_word: false
       count_spaces: false

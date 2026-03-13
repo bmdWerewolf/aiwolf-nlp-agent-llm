@@ -101,8 +101,8 @@ prompt:
     - 出力: <action>Over</action> を出力して準備完了としてください。
 
   daily_initialize: |-
-    {% if info.day == 0 %}
-    ### フェーズ: 0日目の始まり
+    {% if info.day <= 1 %}
+    ### フェーズ: {{ info.day }}日目の始まり
     - 指示: ここでは発言しないでください。
     - 出力: <action>Over</action> を出力して準備完了としてください。
 
