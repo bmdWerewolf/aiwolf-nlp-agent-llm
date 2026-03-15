@@ -65,16 +65,22 @@ class AgentLogger:
                 parents=True,
                 exist_ok=True,
             )
-            handler = logging.FileHandler(
-                output_dir / f"{self.name}.log",
-                mode="w",
-                encoding="utf-8",
-            )
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-            )
-            handler.setFormatter(formatter)
-            self.logger.addHandler(handler)
+            self.llm_log_path = output_dir / f"{self.name}_llm.log"
+        else:
+            self.llm_log_path = None
+
+    def llm_state(self, content: str) -> None:
+        """Overwrite LLM call log with latest state.
+
+        LLM呼び出しの最新状態でログファイルを上書きする.
+
+        Args:
+            content (str): Full LLM call content to write / 書き込むLLM呼び出しの内容
+        """
+        if self.llm_log_path is None:
+            return
+        with self.llm_log_path.open("w", encoding="utf-8") as f:
+            f.write(content)
 
     def packet(self, req: Request | None, res: str | None) -> None:
         """Log packet information.

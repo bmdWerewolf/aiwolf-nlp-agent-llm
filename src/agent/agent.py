@@ -210,25 +210,21 @@ class Agent:
                     label = label_map.get(msg.__class__.__name__, msg.__class__.__name__)
                     history_parts.append(f"  ┌─ {label} ─\n{msg.content}\n  └────────────────────────────────────────────────────")
                 history_lines = "\n\n".join(history_parts) if history_parts else "  (なし)"
-                self.agent_logger.logger.info(
-                    "\n"
+                self.agent_logger.llm_state(
                     "╔══════════════════════════════════════════════════════╗\n"
                     "║                    LLM CALL                         ║\n"
                     "╠══════════════════════════════════════════════════════╣\n"
                     "║  過去のやりとり (HISTORY)                              ║\n"
                     "╚══════════════════════════════════════════════════════╝\n"
-                    "%s\n\n"
+                    + history_lines + "\n\n"
                     "┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓\n"
                     "┃  ★ 現在のリクエスト (PROMPT)                           ┃\n"
                     "┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛\n"
-                    "%s\n\n"
+                    + prompt + "\n\n"
                     "┌──────────────────────────────────────────────────────┐\n"
                     "│  LLM応答 (RESPONSE)                                  │\n"
                     "└──────────────────────────────────────────────────────┘\n"
-                    "%s\n",
-                    history_lines,
-                    prompt,
-                    response,
+                    + response + "\n"
                 )
                 return self._extract_action(response)
             except Exception:
