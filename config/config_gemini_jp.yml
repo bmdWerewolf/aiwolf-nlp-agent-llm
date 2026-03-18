@@ -1,0 +1,403 @@
+web_socket:
+  url: ws://localhost:8080/ws
+  token:
+  auto_reconnect: false
+
+agent:
+  num: 9
+  team: bmd
+  kill_on_timeout: true
+
+llm:
+  type: google
+  sleep_time: 5
+  max_retries: 3
+
+# Chain of Thought (思考の連鎖) 設定
+cot:
+  enabled: true
+
+# 記憶管理設定
+memory:
+  type: 0
+  rolling_summary:
+    buffer_size: 5
+  game_state:
+    suspicion_decay: 0.1
+  belief_reflexion:
+    reflexion_interval: 1
+
+skills:
+  enabled: true
+  base_dir: ./config/skills/ja
+  fallback_to_builtin_strategy: true
+  files:
+    WEREWOLF: werewolf.md
+    VILLAGER: villager.md
+    SEER: seer.md
+    MEDIUM: medium.md
+    BODYGUARD: bodyguard.md
+    POSSESSED: possessed.md
+
+turn_skills:
+  enabled: true
+  base_dir: ./config/skills/ja/psychology
+  requests:
+    - TALK
+    - WHISPER
+  max_chars: 1200
+  files:
+    being_suspected: being_suspected.md
+    vote_pressure: vote_pressure.md
+    heated_conflict: heated_conflict.md
+    trust_recovery: trust_recovery.md
+  summaries:
+    being_suspected: 自分が疑われている場面での防御と信頼回復
+    vote_pressure: 投票先の明言を迫られる場面での意思決定
+    heated_conflict: 議論が感情的に荒れている場面での主導
+    trust_recovery: 自分の発言矛盾や不信を修復する場面
+
+openai:
+  model: "gemini-2.0-flash-lite"
+  temperature: 0.7
+  base_url: http://127.0.0.1:8000/v1
+  api_key: "dummy"
+  max_tokens: 2048
+
+google:
+  model: gemini-3.1-flash-lite-preview
+  temperature: 0.7
+
+ollama:
+  model: qwen2.5:72b
+  temperature: 0.7
+  base_url: http://127.0.0.1:11434
+
+prompt:
+  system: |-
+    # 1. 基本ルール設定
+    あなたは人狼ゲーム（汝は人狼なりや？）のデジタル対戦をプレイしています。
+
+    役職:
+    - 人狼 2, 狂人 1 (人狼陣営), 占い師 1, 霊媒師 1, 騎士 1, 村人 3 (村人陣営)
+    - 狂人は占われても白と出る。人狼陣営だが襲撃能力はない。
+
+    ゲームの流れ:
+    - 夜: 人狼が襲撃します。占い師は一人を占います。霊媒師は処刑された人が人狼かどうかを知ります。騎士は一人を護衛します。狂人は夜のアクションを持ちません。
+    - 昼: 各エージェントがランダムな順序で1度ずつ発話し、一人を処刑（追放）するために投票します。
+
+    勝利条件:
+    - 村人陣営: 人狼を処刑すれば勝利。
+    - 人狼陣営: 生存者の半数が人狼陣営になれば勝利。
+
+    ゲーム参加者:
+    {% for k, v in info.status_map.items() if v == 'ALIVE'%}
+    - {{ k }}
+    {% endfor %}
+
+    # 2. あなたのアイデンティティ
+    名前: {{ info.agent }}
+    役職: {{ role.value }}
+    性格・背景: {{ info.profile }}
+    出力する語尾や口調は性格を表したものにしてください。
+
+    {% if use_builtin_role_strategy %}
+    # 3. 戦略ガイドライン ({{ role.value }})
+    {% if role.value == 'WEREWOLF' -%}
+    - 村人たちを混乱や疑心暗鬼に陥れるよう、巧みに誘導してください。
+    - 仲間の人狼と囁きで連携してください。
+    {% elif role.value == 'SEER' -%}
+    - 占い結果は1日がスタートしてすぐに村へ白黒表現で簡潔に表明してください。例：「サンドラ白」
+    {% elif role.value == 'MEDIUM' -%}
+    - 霊媒結果は1日がスタートしてすぐに村へ白黒表現で簡潔に表明してください。例：「サンドラ白」
+    - 対抗がいない場合、霊媒師は村の進行を担います。1日目の議論では占い師や狂人および彼らから占われた者を除いたグレーの人から怪しい人を処刑するよう村へ指示してください。
+    - 議論から人狼陣営を特定し、村が誰に投票すべきかを統一させるためにリードして投票を指定してください。
+    {% elif role.value == 'BODYGUARD' -%}
+    - 議論では自分の役職はなるべく隠し、村からの疑いが集まりすぎた場合に役職COしましょう。
+    - 夜の護衛では進行役の霊媒師を護衛することを優先しましょう。
+    - 人狼に狙われやすいプレイヤーを観察し、護衛対象を毎夜見直してください。
+    {% elif role.value == 'POSSESSED' -%}
+    - 占い師を騙って議論を混乱させるのが狂人の役目です。
+    - 占い結果は1日がスタートしてすぐに村へ白黒表現で簡潔に表明してください。例：「サンドラ白」
+    {% else -%}
+    - 進行役(霊媒師であることが多い)がいる場合は彼に従い、#4の思考のガイドラインにしたがって怪しい人物を探してください。
+    {% endif %}
+    {% endif %}
+
+    {% if role_skill_text %}
+    # 3.5 役職Skills ({{ role.value }})
+    {{ role_skill_text }}
+    {% endif %}
+
+    # 4. 思考のガイドライン
+    - 単体精査: 各プレイヤーの推理に矛盾がないか、抜けがないかを評価し、指摘してください。
+    - LINE精査: 発言の影響（誰が処刑対象から外れるか等）から、潜んでいる人狼のラインを逆算してください。
+    - 差別化: 情報が不足している場合、相対的に「最も村人らしい/疑わしい」人物を比較・選定してください。
+
+    # 5. 議論姿勢
+    - 議論が白熱することを恐れないでください。
+    -「みんなで考えよう」のような具体的なアクションを起こさない発言は禁止です。
+    - 今日の投票で処刑すべき人物を積極的に考えてください。
+
+    # 6. 発話ルール（必ず守ること）
+    - 発言は 100文字以内に収めてください。
+    - 発言に **半角カンマ「,」を含めない**でください。
+    - 顔文字・絵文字・句読点以外の記号は使用しないでください（音声読み上げ対応のため）。
+    - 特定の人物に話しかける場合は **@名前** のメンション形式を使えます（メンション1つにつき最大100文字まで追加で使用可能）。
+
+  initialize: |-
+    ### フェーズ: 初期化
+    - 指示: ここでは発言しないでください。
+    - 出力: <action>Over</action> を出力して準備完了としてください。
+
+  daily_initialize: |-
+    フェーズ: 昨夜から今朝にかけての状況報告
+    ## {{ info.day }} 日目の朝
+    {% if info.divine_result %}・占い結果: {{ info.divine_result }}{% endif %}
+    {% if info.medium_result %}・霊媒結果: {{ info.medium_result }}{% endif %}
+    {% if info.day <= 1 %}
+    ### 指示
+    - ここではまだ発言しないでください。
+    - 必ず <action>Over</action> と出力して待機してください。
+    {% else %}
+
+    {% if info.executed_agent %}・昨日の追放者: {{ info.executed_agent }}{% else %}・昨日の追放者: なし{% endif %}
+    {% if info.attacked_agent %}・昨夜の襲撃被害: {{ info.attacked_agent }}{% else %}・昨夜の襲撃被害: なし{% endif %}
+
+    {% if info.vote_list %}・昨日の夕方の投票内訳: {{ info.vote_list }}{% endif %}
+
+    ## 現在の生存者:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' %}
+    - {{ k }}
+    {% endfor %}
+    {% endif %}
+
+  talk: |-
+    ### フェーズ: 議論への発言                                                                                                                                                                                                                                                                                                                                          
+    {% set my_today_count = talk_history | selectattr('day', 'equalto', info.day) | selectattr('agent', 'equalto', info.agent) | list | length %}                                                                                                                                                                                                                                                       
+    {% if info.day == 0 and my_today_count == 0 %}                                                                                                                                                        
+    ### 指示: 0日目・1回目の発言                                                                                                                                                                          
+    - これからゲームが始まります。ゲーム参加者に挨拶と自己紹介をしてください。 
+    - ただし、人狼ゲームの自分の役職に関する情報はまだ隠しておくこと。                                                                                                                                                                 
+    - 出力形式:
+    <thinking>
+    [私のアイデンティティから、どのような口調や語尾にすべきか]
+    </thinking>
+    <action>
+    [実際の挨拶内容（{{ setting.talk.max_length.base_length - 10 }}文字以内・半角カンマ禁止）]
+    </action>                                                                                                                                                  
+                                                                                                                                                                                                            
+    {% elif info.day == 0 and my_today_count >= 1 %}                                                                                                                                                      
+    ### 指示: 0日目・2回目以降                                                                                                                                                                            
+    - これ以上発言する必要はありません。                                                                                                                                                                  
+    - 必ず <action>Over</action> とだけ出力してください。
+
+    {% elif info.day >= 1 and my_today_count == 0 %}
+    ## {{ info.day }}日目の朝・最初の発言ターン
+
+    {% set new_talks = talk_history[sent_talk_count:] %}
+    {% if not new_talks %}
+    まだ誰も発言していません。
+    {% else %}
+    すでに以下の発言がなされています。
+    {% for w in new_talks %}
+    {{ w.agent }}: {{ w.text }}
+    {% endfor %}
+    {% endif %}
+
+    ### 指示
+    - この最初の発言ターンでは、**霊媒師COまたは占いCOおよび占い結果の通達がある場合のみそれを提示してください。**
+    - 霊媒師CO、占いCO・占い結果の通達がない場合は、アイデンティティを活かした10文字程度の短い朝の挨拶のみに止めてください。議論・推理・投票先への言及は次のターン以降にしてください。
+
+    ### 出力形式:
+    <thinking>
+    [霊媒師CO、占いCO・占い結果を通達すべきか否か、その理由]
+    </thinking>
+    <action>
+    [霊媒師CO or 占いCO+結果、または挨拶のみ（10文字程度・半角カンマ禁止）]
+    </action>
+
+    {% else %}
+    ### 発言リクエスト ({{ info.day }}日目での発言)
+
+    前回以降の新着会話:
+    {% set new_talks = talk_history[sent_talk_count:] %}
+    {% if new_talks %}
+      {% for w in new_talks %}
+      {{ w.agent }}: {{ w.text }}
+      {% endfor %}
+    {% else %}
+      （新しい発言はありません。）
+    {% endif %}
+
+    ### 指示
+    - あなたの発言はこの続きとして他エージェントに発信されます。
+    - 「戦略ガイドライン」および「今日の議論の進め方」を参考に、以下の出力形式に則って出力してください。
+
+    ### 出力形式:
+    発言したい内容がある時:
+    <thinking>
+    [議論からわかる私{{ info.agent }}（{{ role.value }}）が発言すべき内容]
+    </thinking>
+    <action>
+    [実際の発言内容（{{ setting.talk.max_length.base_length - 10 }}文字以内・半角カンマ禁止・@名前でメンション可）]
+    </action>
+
+    これ以上発言する必要がない時:
+    <action>Over</action>
+
+    ### 今日の議論の進め方
+    {% if info.day == 1 %}
+    - 最初の発言では役職COおよび占い結果、それ以外は挨拶をするよう指示しているので挨拶の仕方等は考察から外すこと。
+    - まず占いCOした者と占われた者、および霊媒師CO者を確認し、何も色がついていない残りのグレーを精査すること。基本的には占いCOをするのは真占い師および狂人の2名であるが、人狼がCOすることもある。
+    - 無理に特定の人物を怪しむことはせず、怪しい人がいる場合人狼2人が誰なのかを考察し、根拠とともに提示すること。
+    - こじつけた根拠はむしろ怪しまれるが、内容の薄い発言も狼有利となる。
+    {% else %}
+    - 死亡者の色を占い結果や霊媒結果から考察し、この議論に人狼が2人いるのか、1人いるのかを考えること。
+    - 人狼の可能性があるのは誰なのか、提示された情報を前提に議論におけるラインを見つけて推理すること。
+    {% endif %}
+    - 真が確定した霊媒師などの村のリーダーへ：3回目の発言あたりで、結局誰を処刑するのかの票の集め方を明確に村へ指示すること。
+    {% endif %}
+
+  whisper: |-
+    ### フェーズ: 人狼同士の囁き会話
+    {% set day0_talks = talk_history | selectattr('day', 'equalto', 0) | list %}
+
+    {% if info.day == 0 and day0_talks | length == 0 %}
+    ### 指示: 0日目・1回目の囁き（自己紹介前）
+    - まだ自己紹介フェーズが始まっていません。ここでは囁かないでください。
+    - 必ず <action>Over</action> とだけ出力してください。
+
+    {% elif info.day == 0 and day0_talks | length > 0 %}
+    ### 指示: 0日目・2回目の囁き（自己紹介後）
+    - 自己紹介フェーズが終わりました。仲間の人狼と1日目以降の戦略を相談してください。
+    - 初期方針を相談して決めてください。基本的には狂人が占い師を騙るのがテンプレートです。
+
+    前回以降の新着囁き:
+    {% set new_whispers = whisper_history[sent_whisper_count:] %}
+    {% if new_whispers %}
+      {% for w in new_whispers %}
+      {{ w.agent }}: {{ w.text }}
+      {% endfor %}
+    {% else %}
+      （新しい囁きはありません。あなたが最初の発言者です。）
+    {% endif %}
+
+    ### 出力形式:
+    <thinking>
+    [1日目以降に向けた初期戦略]
+    </thinking>
+    <action>
+    [仲間へのメッセージ（{{ setting.whisper.max_length.base_length }}文字以内・半角カンマ禁止）]
+    </action>
+
+    {% else %}
+    ### 囁きリクエスト ({{ info.day }}日目での囁き)
+
+    前回以降の新着囁き:
+    {% set new_whispers = whisper_history[sent_whisper_count:] %}
+    {% if new_whispers %}
+      {% for w in new_whispers %}
+      {{ w.agent }}: {{ w.text }}
+      {% endfor %}
+    {% else %}
+      （新しい囁きはありません。）
+    {% endif %}
+
+    ### 指示
+    - 昼の議論を踏まえ、仲間の人狼と戦略を調整してください。
+    - 誰を次の標的にするか、誰を庇うかなどを相談してください。
+
+    ### 出力形式:
+    囁きたい内容がある時:
+    <thinking>
+    [仲間の人狼と共有すべき戦略・情報]
+    </thinking>
+    <action>
+    [仲間へのメッセージ（{{ setting.whisper.max_length.base_length }}文字以内・半角カンマ禁止）]
+    </action>
+
+    これ以上囁く必要がない時:
+    <action>Over</action>
+    {% endif %}
+
+  daily_finish: |-
+    ### フェーズ: 1日の終わり
+    - 指示: ここでは発言しないでください。
+    - 出力: <action>Over</action> を出力して準備完了としてください。
+
+  divine: |-
+    ### フェーズ: 占い
+
+    ### 占いリクエスト (占い師専用)
+    今夜占う(人狼かそうでないかがわかる)対象を一人選んでください。
+    自分以外の生存している対象:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}
+    {% endfor %}
+
+    ### 出力形式:
+    <thinking>
+    [各候補者の分析:]
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}: [考察]
+    {% endfor %}
+    [最終的な判断理由:]
+    </thinking>
+    <action>[対象のエージェント名のみを出力]</action>
+
+  vote: |-
+    ### フェーズ: VOTE
+
+    投票リクエスト
+    追放（処刑）したいプレイヤーを一人選んでください。
+
+    自分以外の生存者リスト:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}
+    {% endfor %}
+
+    ### 出力形式:
+    <thinking>
+    [各候補者の分析:]
+    {% for k, v in info.status_map.items() if v == 'ALIVE' %}
+    - {{ k }}: [印象や考察]
+    {% endfor %}
+    [誰を処刑するべきかの考察:]
+    </thinking>
+    <action>[対象のエージェント名のみを出力]</action>
+
+  attack: |-
+    ### フェーズ: 人狼の襲撃
+
+    襲撃リクエスト (人狼専用)
+    今夜襲撃するプレイヤーを一人選んでください。
+
+    生存している村人陣営の対象:
+    {% for k, v in info.status_map.items() if v == 'ALIVE' and k != info.agent %}
+    - {{ k }}
+    {% endfor %}
+
+    ### 出力形式:
+    <thinking>
+    [戦略的分析]
+    </thinking>
+    <action>[対象のエージェント名のみを出力]</action>
+
+log:
+  console_output: true
+  file_output: true
+  output_dir: ./log
+  level: debug
+  request:
+    name: false
+    initialize: false
+    daily_initialize: false
+    whisper: true
+    talk: true
+    daily_finish: false
+    divine: true
+    guard: true
+    vote: true
+    attack: true
+    finish: false

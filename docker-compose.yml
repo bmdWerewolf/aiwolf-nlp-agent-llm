@@ -1,0 +1,111 @@
+# ============================================
+# AIWolf NLP - Docker Compose Configuration
+# ============================================
+#
+# Usage:
+#   Single team (5 agents, same config):
+#     docker-compose --env-file ./config/.env up
+#
+#   Multi team (2 teams, different configs):
+#     docker-compose --env-file ./config/.env --profile multi up
+#
+#   Custom server config:
+#     $env:SERVER_CONFIG="default_5_2Teams.yml"
+#     docker-compose --env-file ./config/.env --profile multi up
+#
+#   Rebuild images:
+#     docker-compose --env-file ./config/.env up --build
+#
+# ============================================
+
+services:
+  # ==========================================
+  # Game Server
+  # ==========================================
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8080}:8080"
+    volumes:
+      # Config files mount (changes take effect immediately, no rebuild needed)
+      - ./server:/app/config
+      # Logs mount
+      - ./server/logs:/app/log
+    restart: unless-stopped
+    # Dynamic server config selection via SERVER_CONFIG env variable
+    # Options: default_5.yml, default_5_2Teams.yml, default_9.yml
+    command: ["./aiwolf-nlp-server-linux-amd64", "-c", "./config/${SERVER_CONFIG:-default_9.yml}"]
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "true"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # ==========================================
+  # Single Team Mode (default)
+  # - Uses one config file
+  # - For single team testing or self-match
+  # ==========================================
+  agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles: ["single", "default"]
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - WS_URL=ws://server:8080/ws
+    volumes:
+      - ./config:/app/config
+      - ./log:/app/log
+      - ./src:/app/src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Single config file
+    command: uv run python src/main.py -c ${CONFIG_FILE:-./config/config_gemini_jp.yml}
+
+  # ==========================================
+  # Multi Team Mode (--profile multi)
+  # - Uses multiple config files in ONE container
+  # - main.py handles multiple configs via multiprocessing
+  # ==========================================
+  agent-multi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles: ["multi"]
+    depends_on:
+      server:
+        condition: service_healthy
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - WS_URL=ws://server:8080/ws
+    volumes:
+      - ./config:/app/config
+      - ./log:/app/log
+      - ./src:/app/src
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # Multiple config files - main.py supports nargs="+"
+    command: uv run python src/main.py -c ./config/${CONFIG_FILE1:-config_opr_multi_1.yml} ./config/${CONFIG_FILE2:-config_opr_multi_2.yml}
