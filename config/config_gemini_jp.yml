@@ -27,6 +27,36 @@ memory:
   belief_reflexion:
     reflexion_interval: 1
 
+skills:
+  enabled: true
+  base_dir: ./config/skills/ja
+  fallback_to_builtin_strategy: true
+  files:
+    WEREWOLF: werewolf.md
+    VILLAGER: villager.md
+    SEER: seer.md
+    MEDIUM: medium.md
+    BODYGUARD: bodyguard.md
+    POSSESSED: possessed.md
+
+turn_skills:
+  enabled: true
+  base_dir: ./config/skills/ja/psychology
+  requests:
+    - TALK
+    - WHISPER
+  max_chars: 1200
+  files:
+    being_suspected: being_suspected.md
+    vote_pressure: vote_pressure.md
+    heated_conflict: heated_conflict.md
+    trust_recovery: trust_recovery.md
+  summaries:
+    being_suspected: 自分が疑われている場面での防御と信頼回復
+    vote_pressure: 投票先の明言を迫られる場面での意思決定
+    heated_conflict: 議論が感情的に荒れている場面での主導
+    trust_recovery: 自分の発言矛盾や不信を修復する場面
+
 openai:
   model: "gemini-2.0-flash-lite"
   temperature: 0.7
@@ -71,6 +101,7 @@ prompt:
     性格・背景: {{ info.profile }}
     出力する語尾や口調は性格を表したものにしてください。
 
+    {% if use_builtin_role_strategy %}
     # 3. 戦略ガイドライン ({{ role.value }})
     {% if role.value == 'WEREWOLF' -%}
     - 村人たちを混乱や疑心暗鬼に陥れるよう、巧みに誘導してください。
@@ -90,6 +121,12 @@ prompt:
     - 占い結果は1日がスタートしてすぐに村へ白黒表現で簡潔に表明してください。例：「サンドラ白」
     {% else -%}
     - 進行役(霊媒師であることが多い)がいる場合は彼に従い、#4の思考のガイドラインにしたがって怪しい人物を探してください。
+    {% endif %}
+    {% endif %}
+
+    {% if role_skill_text %}
+    # 3.5 役職Skills ({{ role.value }})
+    {{ role_skill_text }}
     {% endif %}
 
     # 4. 思考のガイドライン

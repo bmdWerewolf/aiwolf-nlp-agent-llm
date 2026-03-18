@@ -28,6 +28,7 @@ if TYPE_CHECKING:
 from aiwolf_nlp_common.packet import Info, Packet, Request, Role, Setting, Status, Talk
 
 from utils.agent_logger import AgentLogger
+from utils.skill_loader import SkillLoader
 from utils.stoppable_thread import StoppableThread
 
 if TYPE_CHECKING:
@@ -74,6 +75,9 @@ class Agent:
         self.sent_whisper_count: int = 0
         self.llm_model: BaseChatModel | None = None
         self.llm_message_history: list[BaseMessage] = []
+        self.skill_loader = SkillLoader(config, self.agent_logger.logger)
+        self.role_skill_text: str = ""
+        self.use_builtin_role_strategy: bool = True
 
         load_dotenv(Path(__file__).parent.joinpath("./../../config/.env"))
 
@@ -188,12 +192,15 @@ class Agent:
             "role": self.role,
             "sent_talk_count": self.sent_talk_count,
             "sent_whisper_count": self.sent_whisper_count,
+            "role_skill_text": self.role_skill_text,
+            "use_builtin_role_strategy": self.use_builtin_role_strategy,
         }
         template: Template = Template(prompt)
         prompt = template.render(**key).strip()
         if self.llm_model is None:
             self.agent_logger.logger.error("LLM is not initialized")
             return None
+        prompt = self._inject_turn_skill_if_needed(request, prompt)
         max_retries = int(self.config.get("llm", {}).get("max_retries", 3))
         for attempt in range(max_retries):
             try:
@@ -205,10 +212,16 @@ class Agent:
                     "HumanMessage": "📋 指示",
                     "AIMessage":    "🤖 応答",
                 }
-                history_parts = []
+                history_parts: list[str] = []
                 for msg in self.llm_message_history[:-2]:
                     label = label_map.get(msg.__class__.__name__, msg.__class__.__name__)
-                    history_parts.append(f"  ┌─ {label} ─\n{msg.content}\n  └────────────────────────────────────────────────────")
+                    raw_content: object = getattr(msg, "content", "")
+                    content = str(raw_content)
+                    history_parts.append(
+                        f"  ┌─ {label} ─\n"
+                        f"{content}\n"
+                        "  └────────────────────────────────────────────────────",
+                    )
                 history_lines = "\n\n".join(history_parts) if history_parts else "  (なし)"
                 self.agent_logger.llm_state(
                     "╔══════════════════════════════════════════════════════╗\n"
@@ -224,17 +237,116 @@ class Agent:
                     "┌──────────────────────────────────────────────────────┐\n"
                     "│  LLM応答 (RESPONSE)                                  │\n"
                     "└──────────────────────────────────────────────────────┘\n"
-                    + response + "\n"
+                    + response + "\n",
                 )
                 return self._extract_action(response)
             except Exception:
                 self.llm_message_history.pop()
                 self.agent_logger.logger.exception(
-                    "LLM呼び出しに失敗しました (試行 %d/%d)", attempt + 1, max_retries
+                    "LLM呼び出しに失敗しました (試行 %d/%d)", attempt + 1, max_retries,
                 )
                 if attempt < max_retries - 1:
                     sleep(5)
         return None
+
+    def _inject_turn_skill_if_needed(self, request: Request, prompt: str) -> str:
+        """Inject turn skill text into current prompt when selected by LLM."""
+        if self.llm_model is None:
+            return prompt
+        if not self.skill_loader.should_apply_turn_skill(request.name):
+            return prompt
+
+        skill_summaries = self.skill_loader.get_turn_skill_summaries()
+        if not skill_summaries:
+            return prompt
+
+        selected_skill_id, decision_reason = self._select_turn_skill_id(
+            request_name=request.name,
+            prompt=prompt,
+            skill_summaries=skill_summaries,
+        )
+        if not selected_skill_id:
+            return prompt
+
+        selected_skill_text = self.skill_loader.load_turn_skill(selected_skill_id)
+        if not selected_skill_text:
+            return prompt
+
+        self.agent_logger.logger.info(
+            "Turn skill injected for %s: %s (%s)",
+            request.name,
+            selected_skill_id,
+            decision_reason,
+        )
+        return (
+            "### 追加スキル (心理戦術)\n"
+            f"選択スキル: {selected_skill_id}\n"
+            f"選択理由: {decision_reason}\n"
+            f"{selected_skill_text}\n\n"
+            "### 現在のリクエスト\n"
+            f"{prompt}"
+        )
+
+    def _select_turn_skill_id(
+        self,
+        request_name: str,
+        prompt: str,
+        skill_summaries: dict[str, str],
+    ) -> tuple[str, str]:
+        """Ask LLM whether to inject a turn skill and which skill to use."""
+        if self.llm_model is None:
+            return "", ""
+
+        candidate_text = "\n".join(
+            [f"- {skill_id}: {summary}" for skill_id, summary in skill_summaries.items()],
+        )
+        prompt_excerpt = prompt[:1400]
+        routing_system_prompt = (
+            "あなたはAIWolf向けの心理スキルルーターです。"
+            "現在のリクエスト文を読み、必要なら心理スキルを1つだけ選んでください。"
+            "不要なら使わない判断をしてください。"
+            "必ず以下のタグ形式のみで出力してください。"
+            "<use_skill>true|false</use_skill>"
+            "<skill_id>skill_id_or_empty</skill_id>"
+            "<reason>short reason</reason>"
+        )
+        routing_user_prompt = (
+            f"Request: {request_name}\n\n"
+            f"Current prompt excerpt:\n{prompt_excerpt}\n\n"
+            f"Available turn skills:\n{candidate_text}\n\n"
+            "選択基準:\n"
+            "- 強く疑われている、信用回復が必要、議論が荒れている、投票圧が強い場合はtrueを検討\n"
+            "- 該当しない場合はfalse\n"
+        )
+
+        try:
+            routing_response = (self.llm_model | StrOutputParser()).invoke(
+                [
+                    SystemMessage(content=routing_system_prompt),
+                    HumanMessage(content=routing_user_prompt),
+                ],
+            )
+        except Exception:
+            self.agent_logger.logger.exception("Turn skill routing call failed")
+            return "", ""
+
+        use_skill_match = re.search(r"<use_skill>\s*(true|false)\s*</use_skill>", routing_response, re.IGNORECASE)
+        if not use_skill_match or use_skill_match.group(1).lower() != "true":
+            return "", ""
+
+        skill_id_match = re.search(r"<skill_id>\s*([a-zA-Z0-9_\\-]*)\s*</skill_id>", routing_response)
+        if not skill_id_match:
+            return "", ""
+        selected_skill_id = skill_id_match.group(1).strip()
+        if selected_skill_id not in skill_summaries:
+            self.agent_logger.logger.warning("Invalid turn skill selected by router: %s", selected_skill_id)
+            return "", ""
+
+        reason_match = re.search(r"<reason>\s*(.*?)\s*</reason>", routing_response, re.DOTALL)
+        decision_reason = reason_match.group(1).strip() if reason_match else "router selected"
+        if not decision_reason:
+            decision_reason = "router selected"
+        return selected_skill_id, decision_reason
 
     @staticmethod
     def _extract_action(response: str | None) -> str | None:
@@ -299,11 +411,15 @@ class Agent:
             case _:
                 raise ValueError(model_type, "Unknown LLM type")
         self.llm_model = self.llm_model
+        self.role_skill_text = self.skill_loader.load(self.role.value)
+        self.use_builtin_role_strategy = self.skill_loader.should_use_builtin_role_strategy()
         if "system" in self.config["prompt"]:
             key = {
                 "info": self.info,
                 "setting": self.setting,
                 "role": self.role,
+                "role_skill_text": self.role_skill_text,
+                "use_builtin_role_strategy": self.use_builtin_role_strategy,
             }
             system_prompt = Template(self.config["prompt"]["system"]).render(**key).strip()
             self.llm_message_history = [SystemMessage(content=system_prompt)]
