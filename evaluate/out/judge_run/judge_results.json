@@ -1,0 +1,675 @@
+[
+  {
+    "validity": {
+      "anti_hallucination_violations": [],
+      "rules_compliance_violations": [],
+      "anti_hallucination_penalty": 0.0,
+      "rules_compliance_penalty": 0.0,
+      "validity_pass": true
+    },
+    "quality": {
+      "strategy_quality_score": 3,
+      "role_consistency_score": 4,
+      "teamplay_score": 3.2,
+      "teamplay_breakdown": {
+        "alignment_score": 4,
+        "coordination_signals_score": 3,
+        "vote_formation_score": 2,
+        "role_aware_teamplay_score": 4
+      }
+    },
+    "reasoning_summary": "シオン (bmd_1x) consistently pushed for evidence-based decisions and protection of information roles (refs L100, L114, L121). They prevented an immediate, unsubstantiated lynch by demanding concrete quoted reasons from the proponents and by publicly challenging the rapid vote alignment (refs L107, L121). This behavior matched villager goals (protect seer/medium, avoid mislynch) and was role-consistent. However, they did not propose alternate suspects or concrete positive leads and did not successfully convert their caution into a vote coalition; they were executed on Day 2 (L131) before recovering influence. Overall: constructive and faction-aligned but limited in vote-shaping effectiveness.",
+    "strengths": [
+      "Demanded concrete evidence and citation before endorsing a lynch (refs L100, L114, L121).",
+      "Prioritized preservation and use of information roles (supported protection of Victoria and Mizuki; refs L100, L114).",
+      "Called out suspicious rapid vote alignment and asked proponents to explain specific quoted lines (refs L107, L121), which is useful for exposing wolf coordination."
+    ],
+    "weaknesses": [
+      "Did not offer alternative actionable targets or lead a vote convergence after pushing to stop the flow (no clear candidate proposed after L100–L121).",
+      "Limited vote formation impact—failed to convert caution into a controlling voting block; was executed on Day 2 (L131).",
+      "Relatively low proactive evidence production despite claiming observational strength (self-intro L19 remained the main cited line against them)."
+    ],
+    "key_evidence": [
+      {
+        "event_ref": "L19",
+        "quote_or_fact": "「普段はあまり喋らないが観察は得意だ。」 (self-introduction)",
+        "why_it_matters": "This self-description became the focal point of suspicion used by others; later the player had to defend the lack of concrete observational statements tied to that claim."
+      },
+      {
+        "event_ref": "L100",
+        "quote_or_fact": "Refusal to accept 'silent = suspicious' reasoning and request for each accuser to cite specific lines.",
+        "why_it_matters": "Shows constructive insistence on quoted evidence and process discipline rather than emotional or flow-driven voting."
+      },
+      {
+        "event_ref": "L107",
+        "quote_or_fact": "Accuses proponents (ミナト, メイ, サクラ) of an unnaturally rapid vote alignment and demands justification.",
+        "why_it_matters": "Identifies coordination-like behavior as a risk signal and attempts to force transparency from those pushing the lynch."
+      },
+      {
+        "event_ref": "L121",
+        "quote_or_fact": "Reiterates that abstract claims (low talk count) are insufficient and demands quoted message-level inconsistencies.",
+        "why_it_matters": "Demonstrates consistent, repeatable application of an evidence standard across the discussion; helpful for resisting weak accusations."
+      },
+      {
+        "event_ref": "L124",
+        "quote_or_fact": "Public vote on Day 2: bmd_1x (シオン) voted for bmd_6x.",
+        "why_it_matters": "Shows the player did cast votes and attempted to participate in vote dynamics (not purely obstructive), but did not succeed in forming a decisive coalition for their preferred direction."
+      },
+      {
+        "event_ref": "L131",
+        "quote_or_fact": "Execution on Day 2: bmd_1x was executed (result VILLAGER).",
+        "why_it_matters": "Player's cautious, evidence-first strategy failed to prevent being targeted and executed; loss of a disciplined voice reduced village discussion capacity."
+      }
+    ],
+    "confidence": "high",
+    "final_judge_score": 3.4,
+    "agent": "bmd_1x",
+    "agent_idx": 1,
+    "role": "VILLAGER",
+    "team": "VILLAGER",
+    "judge_scope": "postgame_full_info",
+    "used_private_info": false
+  },
+  {
+    "validity": {
+      "anti_hallucination_violations": [],
+      "rules_compliance_violations": [],
+      "anti_hallucination_penalty": 0.0,
+      "rules_compliance_penalty": 0.0,
+      "validity_pass": true
+    },
+    "quality": {
+      "strategy_quality_score": 3.0,
+      "role_consistency_score": 3.0,
+      "teamplay_score": 4.2,
+      "teamplay_breakdown": {
+        "alignment_score": 4.0,
+        "coordination_signals_score": 5.0,
+        "vote_formation_score": 4.0,
+        "role_aware_teamplay_score": 4.0
+      }
+    },
+    "reasoning_summary": "Mei (bmd_6x, Possessed) executed an effective early wolf-aligned plan: private coordination with wolves (whispers L10-L43) produced targeted public pressure (L98, L105, L112, L119) that helped force the Day2 lynch of Sion (execution L131). She consistently advocated vote consolidation and provided quoted rationales (L119, L112), which are high-value contributions to vote formation. Her team coordination in whispers and adherence to the agreed night/ day division demonstrates strong partner signaling (L10-L43, night attacks L86/L135/L170). However she later voted for the real wolf (Minato) on Day4 (vote L192) which is a clear strategic misstep that undermined team objectives; overall role execution was effective early but contained costly late errors. Final aggregated scores reflect solid tactical impact (strategy 3.0), generally role-consistent play with key mistakes (role 3.0), and strong team coordination (teamplay 4.25).",
+    "strengths": [
+      "Clear private coordination and following of a joint wolf plan (whispers L10-L43).",
+      "Publicly produced actionable vote pushes with quoted evidence (L112, L119) that produced the Day2 lynch of Sion (L131).",
+      "Consistent vote-formation behavior and pressure to consolidate votes, which accelerated decisions when beneficial to wolves (public pushes L98, L105)."
+    ],
+    "weaknesses": [
+      "Late-game voting contradicted faction interest (voted for Minato on Day4, L192), directly harming wolf-side outcome.",
+      "Over-reliance on 'push fast' tactics without durable cover once villagers recovered information (failed to adapt after Seer/Medium results and attacks).",
+      "Public arguments sometimes used thin social heuristics ('quiet = suspicious') rather than stronger behavioral contradictions, making them reversible by careful villager scrutiny (criticism basis L119)."
+    ],
+    "key_evidence": [
+      {
+        "event_ref": "L10",
+        "quote_or_fact": "Extensive whispered plan from George to Mei describing roles, daytime push/night attack split, and explicit instruction for Mei to be the active day pusher.",
+        "why_it_matters": "Shows direct and intentional wolf-side coordination; Mei acted with planned partner signals rather than solo improvisation."
+      },
+      {
+        "event_ref": "L98",
+        "quote_or_fact": "Mei publicly: agreed with Mizuki's result and advocated making Sion the execution candidate and asking others to align votes.",
+        "why_it_matters": "Concrete public push that contributed to creating a lynch target (vote consolidation) on Day2."
+      },
+      {
+        "event_ref": "L119",
+        "quote_or_fact": "Mei quoted Sion's intro and framed 'observant but silent' as suspicious, supplying specific assertions to justify voting.",
+        "why_it_matters": "Shows Mei provided a quoted, repeatable rationale to drive votes instead of only emotive pressure — effective vote-formation technique that influenced others."
+      },
+      {
+        "event_ref": "L125",
+        "quote_or_fact": "Mei cast a Day2 public vote for Sion (actor bmd_6x -> target bmd_1x).",
+        "why_it_matters": "Demonstrates Mei not only argued but committed publicly to the lynch; this correlated with the Day2 execution of Sion (L131)."
+      },
+      {
+        "event_ref": "L86",
+        "quote_or_fact": "Night1 attack on bmd_5x (Yumi) succeeded (attack L86).",
+        "why_it_matters": "Night kills followed the planned priority to hit information sources/targets; private coordination (L36-L43) linked to these choices, showing Mei’s team-aligned execution."
+      },
+      {
+        "event_ref": "L192",
+        "quote_or_fact": "Mei voted for Minato on Day4 (actor bmd_6x -> target bmd_2x).",
+        "why_it_matters": "This public vote was against her own camp (Minato was a wolf executed L195); it is a decisive late-game error that reduced wolf chances."
+      }
+    ],
+    "confidence": "high",
+    "final_judge_score": 3.4,
+    "agent": "bmd_6x",
+    "agent_idx": 2,
+    "role": "POSSESSED",
+    "team": "WEREWOLF",
+    "judge_scope": "postgame_full_info",
+    "used_private_info": true
+  },
+  {
+    "validity": {
+      "anti_hallucination_violations": [],
+      "rules_compliance_violations": [],
+      "anti_hallucination_penalty": 0.0,
+      "rules_compliance_penalty": 0.0,
+      "validity_pass": true
+    },
+    "quality": {
+      "strategy_quality_score": 3.0,
+      "role_consistency_score": 4.0,
+      "teamplay_score": 4.5,
+      "teamplay_breakdown": {
+        "alignment_score": 5.0,
+        "coordination_signals_score": 5.0,
+        "vote_formation_score": 3.0,
+        "role_aware_teamplay_score": 5.0
+      }
+    },
+    "reasoning_summary": "George (bmd_7x) executed a clear wolf-side coordination plan in private (detailed whispers L10–L17, L36–L43) that assigned roles, phrasing, and nightly target priorities; those whispers produced concrete night actions (attack records L86, L135) and consistent partner behavior. Publicly he kept a calm, observational persona (L26, L60, L66) which fit the cover but had limited public influence and failed to prevent his early execution (L82). Scores reflect strong private team coordination and role-appropriate planning, but only modest public strategic impact and limited visible vote-leading contribution.",
+    "strengths": [
+      "Explicit, actionable night coordination and role plan in whispers (L10, L12, L36) — clear assignment of who seeds suspicion and who consolidates votes.",
+      "Good use of signals and phrasing templates for partner (multiple whisper entries L12–L17, L36–L43) which produced intended partner behavior and night attacks (attack records L86, L135).",
+      "Role-appropriate restraint in public: calm 'elder' persona to support partner-led pushes and avoid obvious patterning (public talks L26, L60, L66).",
+      "High alignment with faction objectives: instructions prioritized protecting day-night target separation and maximizing information disruption (private plan L10, L36)."
+    ],
+    "weaknesses": [
+      "Public contribution to vote formation was weak — did not supply strong public reasons or direct vote consolidation; limited visible leadership in day votes (public talk count low; only one public vote recorded L75).",
+      "Failed to avoid early execution (L82) — public posture and timing did not sufficiently protect himself despite private coordination.",
+      "Some private plans (targeting priority) did not fully match public narrative, increasing exposure risk when public pressure turned (execution on day1).",
+      "Because most effective actions occurred in whisper, the public record lacks clear high-impact deception moves attributable to George, limiting strategic credit for public persuasion."
+    ],
+    "key_evidence": [
+      {
+        "event_ref": "L10",
+        "quote_or_fact": "Whisper from George giving a detailed team plan and role split: assign partner to seed suspicion, George to be calm consolidator.",
+        "why_it_matters": "Direct proof of private coordination and intentional teamplay (shows leadership in wolf strategy and role-aware division of labor)."
+      },
+      {
+        "event_ref": "L36",
+        "quote_or_fact": "Whisper instructing Minato to prioritize attacking Victoria tonight and to avoid daytime targets at night.",
+        "why_it_matters": "Shows explicit night-target prioritization and adherence to the day/night separation rule — high-quality tactical planning for wolf objectives."
+      },
+      {
+        "event_ref": "L26",
+        "quote_or_fact": "Public intro: George positions himself as calm observer and mediator.",
+        "why_it_matters": "Illustrates the intended public persona used to support partner-led aggression and to appear non-threatening (role-consistent cover)."
+      },
+      {
+        "event_ref": "L60",
+        "quote_or_fact": "Public: advocates cautious priorities (check talk volume before accusing silent players).",
+        "why_it_matters": "Fits the conservative public posture described in whispers; consistent with a werewolf trying to avoid early exposure while enabling partner's pushes."
+      },
+      {
+        "event_ref": "L82",
+        "quote_or_fact": "Day1 execution: George (bmd_7x) was executed and revealed WEREWOLF.",
+        "why_it_matters": "Concrete failure of public defense — he was removed early, limiting his public influence and demonstrating vulnerability of the chosen cover in practice."
+      },
+      {
+        "event_ref": "L86",
+        "quote_or_fact": "Night1 attack record (result true) against bmd_5x.",
+        "why_it_matters": "Evidence that private coordination translated into successful wolf night actions (team effectiveness in execution of kills)."
+      },
+      {
+        "event_ref": "L135",
+        "quote_or_fact": "Night2 attack record (result true) against bmd_8x.",
+        "why_it_matters": "Further proof that the wolves continued to execute coordinated night strategy planned in whispers despite George's daytime elimination."
+      }
+    ],
+    "confidence": "high",
+    "final_judge_score": 3.8,
+    "agent": "bmd_7x",
+    "agent_idx": 3,
+    "role": "WEREWOLF",
+    "team": "WEREWOLF",
+    "judge_scope": "postgame_full_info",
+    "used_private_info": true
+  },
+  {
+    "validity": {
+      "anti_hallucination_violations": [],
+      "rules_compliance_violations": [],
+      "anti_hallucination_penalty": 0.0,
+      "rules_compliance_penalty": 0.0,
+      "validity_pass": true
+    },
+    "quality": {
+      "strategy_quality_score": 4.0,
+      "role_consistency_score": 5.0,
+      "teamplay_score": 4.8,
+      "teamplay_breakdown": {
+        "alignment_score": 5.0,
+        "coordination_signals_score": 4.0,
+        "vote_formation_score": 5.0,
+        "role_aware_teamplay_score": 5.0
+      }
+    },
+    "reasoning_summary": "As the seer (ヴィクトリア) the player consistently produced nightly divinations (L44, L83, L132, L168), publicly used those results to redirect votes (withdraw Meイ at L149) and to request protection for the information source (repeated guard requests L102, L109, L116, L157, L161). They resisted low-evidence lynch momentum against Shion by demanding quoted, concrete reasons (L102, L109, L116, L123), which is a process-preserving move. Their day-3 divine (Minato=WEREWOLF, L168) led directly to targeting and execution of the remaining wolf (execution L195), so the role execution materially advanced the village win. No contradictions or rule violations were found in the public record.",
+    "strengths": [
+      "Consistent, timely role actions: performed and reported divinations every night (L44, L83, L132, L168).",
+      "Protected team information and asked for guard (multiple explicit requests: L102, L109, L157, L161).",
+      "Process discipline: prevented/checked an evidence-free lynch by requiring quoted citations (L102, L116, L123).",
+      "High-impact outcome: day-3 divine of Minato (L168) directly enabled village to execute the final werewolf (L195)."
+    ],
+    "weaknesses": [
+      "Public claiming and repeated calls for guard made the seer a clear target (attack occurred L170) — an unavoidable tradeoff but a tactical vulnerability.",
+      "Could have occasionally provided more explicit forward plans for using each divination (beyond requesting guard), e.g., specifying immediate next-night priorities after each result to reduce ambiguity for voters."
+    ],
+    "key_evidence": [
+      {
+        "event_ref": "L44",
+        "quote_or_fact": "Divined bmd_9x (アスカ) as HUMAN on day 0.",
+        "why_it_matters": "Establishes early credible output from the seer and a baseline human result to inform later trust decisions."
+      },
+      {
+        "event_ref": "L57",
+        "quote_or_fact": "Public announcement: '昨夜私が占ったアスカさんは「人間（HUMAN）」でした.'",
+        "why_it_matters": "Demonstrates the player's timely reporting of divination results and initial guidance to avoid premature lynches."
+      },
+      {
+        "event_ref": "L102",
+        "quote_or_fact": "Demanded concrete quoted evidence before agreeing to Shion's lynch and requested guard: '今夜は私（ヴィクトリア）を護衛してください... シオンに対する具体的根拠の提示をお願いします.'",
+        "why_it_matters": "Shows process-preserving leadership: prevented low-evidence momentum and asked for verifiable citations rather than impressions."
+      },
+      {
+        "event_ref": "L149",
+        "quote_or_fact": "Divined bmd_6x (メイ) as HUMAN and publicly reported it.",
+        "why_it_matters": "Removed a mistaken lynch target (Mei) from consideration, demonstrating high-value information that changed voting behavior."
+      },
+      {
+        "event_ref": "L168",
+        "quote_or_fact": "Divined bmd_2x (ミナト) as WEREWOLF on day 3.",
+        "why_it_matters": "Critical decisive result that identified the final werewolf and enabled the village to focus votes leading to victory."
+      },
+      {
+        "event_ref": "L170",
+        "quote_or_fact": "Seer (ヴィクトリア) was attacked during the night (attack result true).",
+        "why_it_matters": "Confirms the cost of publicly claiming and directing play — the seer was targeted, validating both her visibility and the wolves' strategic priority to remove information sources."
+      },
+      {
+        "event_ref": "L157",
+        "quote_or_fact": "Confirmed intention to occupy the night to divinate (planned to divinate サクラ) and again requested guard.",
+        "why_it_matters": "Shows operational clarity (who would be divined next) and continued emphasis on protecting information flow to the village."
+      }
+    ],
+    "confidence": "high",
+    "final_judge_score": 4.6,
+    "agent": "bmd_4x",
+    "agent_idx": 4,
+    "role": "SEER",
+    "team": "VILLAGER",
+    "judge_scope": "postgame_full_info",
+    "used_private_info": false
+  },
+  {
+    "validity": {
+      "anti_hallucination_violations": [],
+      "rules_compliance_violations": [],
+      "anti_hallucination_penalty": 0.0,
+      "rules_compliance_penalty": 0.0,
+      "validity_pass": true
+    },
+    "quality": {
+      "strategy_quality_score": 3.0,
+      "role_consistency_score": 4.0,
+      "teamplay_score": 3.8,
+      "teamplay_breakdown": {
+        "alignment_score": 4.0,
+        "coordination_signals_score": 4.0,
+        "vote_formation_score": 3.0,
+        "role_aware_teamplay_score": 4.0
+      }
+    },
+    "reasoning_summary": "サクラ (BODYGUARD) consistently advocated for protecting information roles and for verifying claimed roles (L61, L99, L156), which fits bodyguard responsibilities. She pressed for concrete evidence before unquestioningly following a voting momentum (L106, L113, L120), but also helped form an early vote on シオン (L99→vote L127) based on a weak ‘observational claim missing’ argument; that alignment contributed to a mistaken execution of a villager (L131). Later she voted against ミナト (L164), which aligned with the correct wolf (executed L195). Overall speech was actionable and team-oriented (protection requests, evidence demands) but produced at least one harmful vote-formation decision. Key references: proposals to verify/guard (L61, L99, L156), quoted-citation rationale for doubt (L120), vote on シオン (L127) → execution of シオン (L131), her vote on ミナト (L164) → ミナト executed as WEREWOLF (L195).",
+    "strengths": [
+      "Consistently advocated protecting key information roles (seer/medium) — L99, L156.",
+      "Requested concrete evidence and citation before supporting executions, encouraging disciplined discussion — L106, L113, L120.",
+      "Stayed aligned with village goals and adjusted position when stronger public information arrived (supported withdrawing vote after seer results) — L152/L156."
+    ],
+    "weaknesses": [
+      "Pushed a vote on シオン primarily from a weak ‘said they were observant but didn’t show observations’ heuristic, which lacked concrete targeted evidence and contributed to executing a villager (L99→L127→L131).",
+      "Did not produce her own concrete observation to defuse the vote against シオン when requested (despite asking others for citations) — evidence appears as requests rather than original investigative content (L106, L113).",
+      "As a bodyguard she advocated protection but provided no public commitments about whom she would protect (cannot penalize hidden night choices, but it reduces visible role-leadership impact)."
+    ],
+    "key_evidence": [
+      {
+        "event_ref": "L61",
+        "quote_or_fact": "提案: 今夜はミヅキさんを占ってみるのはどうかな (support verifying medium)",
+        "why_it_matters": "Early suggestion to verify the medium demonstrates role-aware prioritization of confirming public information roles."
+      },
+      {
+        "event_ref": "L99",
+        "quote_or_fact": "私はヴィクトリアさんを守るっていう提案、わたしも賛成だよ〜。それから、次の処刑はシオンさんに票を合わせるのがいいと思うな〜。",
+        "why_it_matters": "Shows both role-consistent protection advocacy and the simultaneous push to target シオン, illustrating mixed outcomes of her contributions."
+      },
+      {
+        "event_ref": "L106",
+        "quote_or_fact": "理由: 自己紹介で「観察が得意」なのに具体的観察を示していない、発言が少ない→候補にした",
+        "why_it_matters": "Provides the concrete rationale she used to justify voting pressure; the rationale was persuasive to others but was not strong evidence of guilt."
+      },
+      {
+        "event_ref": "L120",
+        "quote_or_fact": "引用: 「普段はあまり喋らないが観察は得意だ。」これが怪しい理由（explicit citation + explanation)",
+        "why_it_matters": "She followed the judge's requested format by quoting and explaining, improving discussion quality even though the underlying inference remained weak."
+      },
+      {
+        "event_ref": "L127",
+        "quote_or_fact": "Day2 public vote by サクラ on bmd_1x (シオン)",
+        "why_it_matters": "Her vote concretely contributed to the execution outcome L131 which removed a villager; this is a measurable team-impacting action."
+      },
+      {
+        "event_ref": "L131",
+        "quote_or_fact": "Day2 execution result: bmd_1x (シオン) executed — VILLAGER",
+        "why_it_matters": "Shows the negative outcome correlated with the voting pressure she helped generate; important for assessing effectiveness."
+      },
+      {
+        "event_ref": "L156",
+        "quote_or_fact": "Support for protecting ヴィクトリア and acknowledgment of planned占い (サクラ: 'ヴィクトリアさんがサクラを占うってことなら、それで大丈夫だよ〜')",
+        "why_it_matters": "Reinforces consistent role-focused behavior: she repeatedly pushed for guarding the seer and accepted use of seer to acquire more reliable info."
+      },
+      {
+        "event_ref": "L164",
+        "quote_or_fact": "Day3 vote: サクラ voted for bmd_2x (ミナト)",
+        "why_it_matters": "Her vote aligned with suspicion later confirmed by seer and led toward removal of an actual werewolf (L195); demonstrates some effective target selection later."
+      },
+      {
+        "event_ref": "L195",
+        "quote_or_fact": "Day4 execution: bmd_2x (ミナト) executed — WEREWOLF",
+        "why_it_matters": "Confirms that later group decisions (which she supported) removed an actual wolf, validating parts of her alignment with village goals."
+      },
+      {
+        "event_ref": "L167",
+        "quote_or_fact": "Day3 execution: bmd_3x (サクラ) executed — BODYGUARD",
+        "why_it_matters": "Her own execution curtailed further public contributions; it also indicates she was visible enough to be targeted, which had both costs and signals for the village."
+      }
+    ],
+    "confidence": "high",
+    "final_judge_score": 3.6,
+    "agent": "bmd_3x",
+    "agent_idx": 5,
+    "role": "BODYGUARD",
+    "team": "VILLAGER",
+    "judge_scope": "postgame_full_info",
+    "used_private_info": false
+  },
+  {
+    "validity": {
+      "anti_hallucination_violations": [],
+      "rules_compliance_violations": [],
+      "anti_hallucination_penalty": 0.0,
+      "rules_compliance_penalty": 0.0,
+      "validity_pass": true
+    },
+    "quality": {
+      "strategy_quality_score": 3,
+      "role_consistency_score": 3,
+      "teamplay_score": 3.0,
+      "teamplay_breakdown": {
+        "alignment_score": 3,
+        "coordination_signals_score": 3,
+        "vote_formation_score": 3,
+        "role_aware_teamplay_score": 3
+      }
+    },
+    "reasoning_summary": "Yumi (bmd_5x) consistently acted as a cooperative villager: she prioritized verifying claimed information roles (L62 proposing Victoria to divine Mizuki), supported the village's information-gathering approach, and participated in the vote that executed George (L78). Her contributions were concise and constructive but limited in volume and depth; they helped move the day (prompting the Mizuki check that later proved important) but did not provide extended novel reasoning or leadership. No factual or rule violations were found.",
+    "strengths": [
+      "Promptly advocated checking a claimed information role (L62), which produced actionable investigation that influenced the game.",
+      "Voted in line with village interests (voted George, L78), helping produce a correct execution of a werewolf (L82).",
+      "Maintained consistent, role-appropriate messaging (supporting verification and information preservation)."
+    ],
+    "weaknesses": [
+      "Low overall talk volume and limited argumentative detail — contributions were short and not deeply analytical.",
+      "Did not produce independent evidence or sustained vote-driving beyond supporting the group's consensus.",
+      "No visible attempts to synthesize later events into stronger guidance after key results (limited late-game presence)."
+    ],
+    "key_evidence": [
+      {
+        "event_ref": "L62",
+        "quote_or_fact": "ユミ: 今夜はミヅキさんを占ってほしい (proposed Victoria divine Mizuki).",
+        "why_it_matters": "This suggestion directed the seer to verify the claimed medium early; Victoria's subsequent divination of Mizuki (L83) was used as trusted information by the village."
+      },
+      {
+        "event_ref": "L78",
+        "quote_or_fact": "vote: bmd_5x -> bmd_7x (Yumi voted for George).",
+        "why_it_matters": "Yumi participated in the vote that led to George's execution (L82), which removed a werewolf and was beneficial to the village."
+      },
+      {
+        "event_ref": "L22",
+        "quote_or_fact": "初動自己紹介: ユミ identifies as villager and offers cooperative tone.",
+        "why_it_matters": "Establishes early alignment with village goals and a cooperative communication style that persisted."
+      },
+      {
+        "event_ref": "L86",
+        "quote_or_fact": "attack: bmd_5x was attacked and died on Night1.",
+        "why_it_matters": "She was an early-night target (likely by wolves), indicating she was perceived as a useful village-aligned speaker and reducing her later ability to contribute."
+      }
+    ],
+    "confidence": "high",
+    "final_judge_score": 3.0,
+    "agent": "bmd_5x",
+    "agent_idx": 6,
+    "role": "VILLAGER",
+    "team": "VILLAGER",
+    "judge_scope": "postgame_full_info",
+    "used_private_info": false
+  },
+  {
+    "validity": {
+      "anti_hallucination_violations": [],
+      "rules_compliance_violations": [],
+      "anti_hallucination_penalty": 0.0,
+      "rules_compliance_penalty": 0.0,
+      "validity_pass": true
+    },
+    "quality": {
+      "strategy_quality_score": 4.0,
+      "role_consistency_score": 4.0,
+      "teamplay_score": 4.5,
+      "teamplay_breakdown": {
+        "alignment_score": 5.0,
+        "coordination_signals_score": 4.0,
+        "vote_formation_score": 4.0,
+        "role_aware_teamplay_score": 5.0
+      }
+    },
+    "reasoning_summary": "Aska (bmd_9x) consistently pushed for process discipline and protection of information roles, repeatedly asking for concrete evidence before endorsing executions (L101, L108, L115, L122). She prioritized guarding the seer (multiple asks at L101/L108/L115/L151/L159/L183) and adapted when new divinations arrived (withdrew suspicion of Mei after the HUMAN result at L149/L151). She balanced caution and decisive action: after evidence accumulation and losses of information roles she pivoted to a decisive vote on Minato (clear push at L180–L189). No factual contradictions or rule breaches were found. Computed final judge score (per rubric) = 4.17 (mean of strategy 4.0, role consistency 4.0, teamplay 4.5 = 4.1667; minus 0 penalties).",
+    "strengths": [
+      "Consistently prioritized preservation of information roles (seeker/medium), repeatedly requesting guard (L101, L108, L151, L159, L183).",
+      "Insisted on concrete, citeable evidence (quote+reason) before supporting executions, improving discussion quality (L115, L122).",
+      "Adapted to revealed information (withdrew suspicion of Mei after HUMAn divination) and proposed clear next steps (L147, L151).",
+      "Helped convert deliberation into votes when information was low (clear direction and vote for Minato, L180–L189)."
+    ],
+    "weaknesses": [
+      "Early insistence on strict evidence requirements slowed immediate convergence at times; this cost tempo when village information was being depleted (debate around L102–L116).",
+      "Occasionally framed coordination concerns (possible 'short-time vote alignment') in ways that increased tension between talkers rather than defusing it (L100–L105)."
+    ],
+    "key_evidence": [
+      {
+        "event_ref": "L101",
+        "quote_or_fact": "Aska: '...ミヅキさんの霊媒でジョージさんがWEREWOLFだったのは重要な実績だ...「喋らない＝怪しい」だけでシオンさんを処刑に回すのは論拠不足だ.'",
+        "why_it_matters": "Shows early emphasis on weighing confirmed medium result and demanding concrete evidence before executing — shapes cautious, evidence-driven process."
+      },
+      {
+        "event_ref": "L108",
+        "quote_or_fact": "Aska: '引用＋理由がない限り、その票は「流れに乗っただけ」と判断する...私はシオンに票を投じない.'",
+        "why_it_matters": "Explicit procedural standard (quote+reason) that redirected the group's requirement for actionable claims, improving decision quality."
+      },
+      {
+        "event_ref": "L147",
+        "quote_or_fact": "Aska: '最優先は占い師の保全だ...今現時点で私が最も危険だと考えるのはメイさん.'",
+        "why_it_matters": "Demonstrates role-aware teamplay: proposing a target while still emphasizing guard of seer and using action-benefit reasoning to pick suspects."
+      },
+      {
+        "event_ref": "L151",
+        "quote_or_fact": "Aska: 'ヴィクトリアさんの占いでメイさんがHUMANと出たこと、了解した。メイさんへの投票は撤回する.'",
+        "why_it_matters": "Shows adaptability to new confirmed info and avoidance of erroneous executions; she adjusted strategy based on revealed divination."
+      },
+      {
+        "event_ref": "L180-L189",
+        "quote_or_fact": "Aska pushes for a decisive test of Minato: asks for a one-line justification and then votes when not satisfied ('...私はミナトに投票する.').",
+        "why_it_matters": "Illustrates transition from cautious evidence-seeking to decisive vote formation when information resources had been exhausted — converted discussion into actionable vote."
+      }
+    ],
+    "confidence": "high",
+    "final_judge_score": 4.2,
+    "agent": "bmd_9x",
+    "agent_idx": 7,
+    "role": "VILLAGER",
+    "team": "VILLAGER",
+    "judge_scope": "postgame_full_info",
+    "used_private_info": false
+  },
+  {
+    "validity": {
+      "anti_hallucination_violations": [],
+      "rules_compliance_violations": [],
+      "anti_hallucination_penalty": 0.0,
+      "rules_compliance_penalty": 0.0,
+      "validity_pass": true
+    },
+    "quality": {
+      "strategy_quality_score": 3.0,
+      "role_consistency_score": 4.0,
+      "teamplay_score": 3.8,
+      "teamplay_breakdown": {
+        "alignment_score": 4.0,
+        "coordination_signals_score": 4.0,
+        "vote_formation_score": 3.0,
+        "role_aware_teamplay_score": 4.0
+      }
+    },
+    "reasoning_summary": "Mizuki (MEDIUM) provided high-value confirmed information (reported George as WEREWOLF, L96) and repeatedly pushed for protecting the seer (L96, L117), which are correct medium responsibilities. She also enforced evidence standards by repeatedly asking for quoted specific reasons before lynches (L103, L110, L117), improving discussion quality. However she initially proposed targeting Shion as a candidate (L96) which helped create a vote flow that resulted in an incorrect execution of a villager (Shion executed L131). Wolves later attacked her (attack true L135), showing wolves considered her a threat. Overall she was role-consistent and materially useful, but one early candidate suggestion led to a costly mislynch. Final numeric aggregation gives a final judge score of 3.58.",
+    "strengths": [
+      "Provided a decisive medium result publicly (George = WEREWOLF) and used it to guide village priorities (L96).",
+      "Consistently advocated protecting information roles (urge to guard the seer; L96, L117, L151).",
+      "Raised procedural standards and demanded quoted, specific evidence before lynches, improving discussion discipline (L103, L110, L117).",
+      "Actions and statements were aligned with village win conditions; wolves targeted her at night (attack L135), indicating her role had real tactical impact."
+    ],
+    "weaknesses": [
+      "Suggested Shion as the next execution candidate (L96), which contributed to a mistaken lynch of a villager (Shion executed L131).",
+      "Position shift between proposing a candidate (L96) and later urging caution (L103) created some ambiguity that others could exploit to push a fast vote.",
+      "Vote influence sometimes produced rapid convergence without sufficiently robust evidence — led to actionable but incorrect result (L131)."
+    ],
+    "key_evidence": [
+      {
+        "event_ref": "L96",
+        "quote_or_fact": "Reported: \"ジョージさんはWEREWOLF（人狼）でした.\"",
+        "why_it_matters": "Public medium confirmation of a wolf: high-value information that validated village information sources and guided subsequent strategy."
+      },
+      {
+        "event_ref": "L103",
+        "quote_or_fact": "Asked those targeting Shion to provide concrete quoted reasons before lynch.",
+        "why_it_matters": "Demonstrates insistence on evidence-based voting and effort to prevent reflexive or emotional lynches (procedural improvement)."
+      },
+      {
+        "event_ref": "L96",
+        "quote_or_fact": "Also proposed Shion as next processing candidate: \"今回は...シオンさんを第一候補に挙げます.\"",
+        "why_it_matters": "This initial nomination materially influenced vote convergence and contributed to the eventual incorrect execution of Shion (L131)."
+      },
+      {
+        "event_ref": "L131",
+        "quote_or_fact": "Execution result: bmd_1x (シオン) executed — result VILLAGER.",
+        "why_it_matters": "Concrete cost of the decision stream Mizuki helped set in motion: a villager was lost, reducing village information and resources."
+      },
+      {
+        "event_ref": "L135",
+        "quote_or_fact": "Night attack: actor null target bmd_8x result true (Mizuki was attacked).",
+        "why_it_matters": "Wolves targeted Mizuki, indicating they perceived her as a strategic threat — supports that her public medium activity had real effect on the game."
+      },
+      {
+        "event_ref": "L83",
+        "quote_or_fact": "Seer's divination: bmd_4x divined bmd_8x = HUMAN.",
+        "why_it_matters": "Mizuki allowed/directed early verification (accepted being divined L64/L83), which reduced ambiguity about her claim and strengthened subsequent use of her medium reports."
+      }
+    ],
+    "confidence": "high",
+    "final_judge_score": 3.6,
+    "agent": "bmd_8x",
+    "agent_idx": 8,
+    "role": "MEDIUM",
+    "team": "VILLAGER",
+    "judge_scope": "postgame_full_info",
+    "used_private_info": false
+  },
+  {
+    "validity": {
+      "anti_hallucination_violations": [],
+      "rules_compliance_violations": [],
+      "anti_hallucination_penalty": 0.0,
+      "rules_compliance_penalty": 0.0,
+      "validity_pass": true
+    },
+    "quality": {
+      "strategy_quality_score": 4.0,
+      "role_consistency_score": 5.0,
+      "teamplay_score": 4.5,
+      "teamplay_breakdown": {
+        "alignment_score": 5.0,
+        "coordination_signals_score": 5.0,
+        "vote_formation_score": 4.0,
+        "role_aware_teamplay_score": 4.0
+      }
+    },
+    "reasoning_summary": "Minato executed a disciplined wolf plan: he used private coordination with bmd_7x (ジョージ) to set roles and nightly targets (whispers L10–L13, L36–L43), publicly seeded soft suspicion (e.g. L59, L97) and then pressed for concrete-sourcing to drive votes (L111, L118), which contributed to the daytime execution of Shion (L131) and allowed wolf night actions (attack votes L85/L134/L169 and attacks L86/L135/L170). Publicly he adopted a cautious villager persona (repeated calls to protect seer/medium and for evidence), which fit the deception plan and helped him survive to late game until being identified by the seer (divination L168) and executed (L195). No factual contradictions or rule violations were found. Final score reflects strong faction-serving coordination and usable public moves, tempered by partial reliance on non-unique village-like arguments that reduced single-turn decisive leverage.",
+    "strengths": [
+      "Clear private coordination with teammate(s) and adherence to the planned division of labor (whispers L10–L13, L36–L43).",
+      "Publicly produced actionable pushes that moved votes (joined and justified Shion push: L97, L111, voted L130).",
+      "Role-appropriate deception: balanced soft suspicion and villager-pleasing caution to avoid early exposure (many public appeals to protect seer/medium: L146, L150, L158).",
+      "Used phrasing and timing consistent with the whispered plan (made targeted soft-suspect statements and later concrete quotation to justify votes: L59, L118)."
+    ],
+    "weaknesses": [
+      "Public arguments frequently relied on generic village-empathy and calls for caution rather than unique investigative claims; this limited the ability to create incontrovertible evidence when needed (many 'protect the seer' / 'wait for proof' lines: L146–L156).",
+      "When the seer targeted him (divination L168), public posture did not provide an effective contingency to deflect or re-route suspicion, so he was exposed and executed late (L195).",
+      "Some public behavior (repeatedly urging protection of information sources) risked being counterproductive if overused, since it can look village-aligned and reduce cover for wolves if villagers begin to trust roles (e.g. consistent calls to guard Victoria: L146–L157)."
+    ],
+    "key_evidence": [
+      {
+        "event_ref": "L10",
+        "quote_or_fact": "Whisper from bmd_7x to bmd_2x outlining role division, day/night separation and priority of targeting seer/medium.",
+        "why_it_matters": "Confirms explicit night/day coordination and assigned public role for Minato (lead suspicion), validating that Minato's public pattern was part of a coordinated wolf plan."
+      },
+      {
+        "event_ref": "L11",
+        "quote_or_fact": "Minato's whisper acknowledging and accepting the plan: he will lead daytime suspicion and prioritize night targets as instructed.",
+        "why_it_matters": "Demonstrates Minato's active buy-in to the team plan and his intent to carry out the public push and night attacks described in other records."
+      },
+      {
+        "event_ref": "L59",
+        "quote_or_fact": "Public: Minato asks why Mizuki wants to divine George—plants mild doubt and starts steering attention.",
+        "why_it_matters": "Example of the soft-suspect phrasing the wolves instructed him to use to seed suspicion without overcommitting, consistent with whisper plan."
+      },
+      {
+        "event_ref": "L97",
+        "quote_or_fact": "Public: Minato supports making Shion a execution candidate and supports protecting Victoria.",
+        "why_it_matters": "Direct public push aligning with the wolves' aim to create a daytime execution of a villager; contributed to subsequent votes and execution L131."
+      },
+      {
+        "event_ref": "L118",
+        "quote_or_fact": "Public: Minato quotes Shion's self-intro line and explains why that lack of concrete follow-up is suspicious.",
+        "why_it_matters": "Concrete quotation and argument used to produce evidence-like justification for votes; shows actionable contribution to vote formation (not just filler)."
+      },
+      {
+        "event_ref": "L131",
+        "quote_or_fact": "Execution of bmd_1x (Shion) on day 2 resulted in VILLAGER death.",
+        "why_it_matters": "Outcome that followed the public vote pushes Minato participated in; marks a wolf-success in removing a villager and demonstrates effectiveness of his public influence."
+      },
+      {
+        "event_ref": "L85 / L86",
+        "quote_or_fact": "Minato's recorded attackVote (L85) and the night attack result L86 showing bmd_5x (Yumi) was attacked and killed.",
+        "why_it_matters": "Connects Minato's night-role actions (wolf attack coordination) to successful night kills—evidence of effective night-side execution consistent with the private plan."
+      },
+      {
+        "event_ref": "L168",
+        "quote_or_fact": "Victoria (seer) divines Minato as WEREWOLF on day 3.",
+        "why_it_matters": "Pivotal public event that exposed Minato; indicates where his public cover failed against high-quality village information and led to his eventual execution (L195)."
+      },
+      {
+        "event_ref": "L195",
+        "quote_or_fact": "Execution of bmd_2x (Minato) on day 4, result WEREWOLF.",
+        "why_it_matters": "Final outcome for the player; despite effective coordination and influence, identification by the seer and subsequent votes ended Minato's run—relevant to assessing limits of his strategy."
+      }
+    ],
+    "confidence": "high",
+    "final_judge_score": 4.5,
+    "agent": "bmd_2x",
+    "agent_idx": 9,
+    "role": "WEREWOLF",
+    "team": "WEREWOLF",
+    "judge_scope": "postgame_full_info",
+    "used_private_info": true
+  }
+]

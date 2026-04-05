@@ -1,0 +1,26 @@
+﻿You are evaluating one completed AIWolf game from a strict postgame judge perspective.
+
+Return JSON only. Do not use markdown code fences.
+
+Use the rubric and schema below exactly.
+
+Important constraints:
+- Evaluate effectiveness, not just whether the player sounded plausible.
+- Use hidden information only for camp identification and private coordination analysis.
+- Do not punish a player for failing to know hidden information that was not public at the time.
+- For validity issues, record violations and penalties instead of folding them invisibly into other scores.
+- For teamplay, score faction-serving coordination, not individual cleverness in isolation.
+
+Rubric:
+{{ rubric_text }}
+
+Required output schema:
+{{ schema_text }}
+
+Game summary:
+{{ game_summary_json }}
+
+Player packet to judge:
+{{ player_packet_json }}
+
+Produce one JSON object that follows the schema.

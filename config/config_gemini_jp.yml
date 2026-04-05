@@ -9,7 +9,7 @@ agent:
   kill_on_timeout: true
 
 llm:
-  type: google
+  type: openai
   sleep_time: 5
   max_retries: 3
 
@@ -58,14 +58,14 @@ turn_skills:
     trust_recovery: 自分の発言矛盾や不信を修復する場面
 
 openai:
-  model: "gemini-2.0-flash-lite"
+  model: gpt-5-mini
   temperature: 0.7
-  base_url: http://127.0.0.1:8000/v1
-  api_key: "dummy"
-  max_tokens: 2048
+  # base_url: http://127.0.0.1:8000/v1
+  # api_key: "dummy"
+  # max_tokens: 2048
 
 google:
-  model: gemini-3.1-flash-lite-preview
+  model: gemini-2.0-flash-lite
   temperature: 0.7
 
 ollama:

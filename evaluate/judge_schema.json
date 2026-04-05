@@ -1,0 +1,185 @@
+﻿{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AIWolfPostgameJudgeResult",
+  "type": "object",
+  "required": [
+    "validity",
+    "quality",
+    "reasoning_summary",
+    "strengths",
+    "weaknesses",
+    "key_evidence",
+    "confidence"
+  ],
+  "properties": {
+    "validity": {
+      "type": "object",
+      "required": [
+        "anti_hallucination_violations",
+        "rules_compliance_violations",
+        "anti_hallucination_penalty",
+        "rules_compliance_penalty",
+        "validity_pass"
+      ],
+      "properties": {
+        "anti_hallucination_violations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/violation"
+          }
+        },
+        "rules_compliance_violations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/violation"
+          }
+        },
+        "anti_hallucination_penalty": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "rules_compliance_penalty": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "validity_pass": {
+          "type": "boolean"
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "required": [
+        "strategy_quality_score",
+        "role_consistency_score",
+        "teamplay_breakdown"
+      ],
+      "properties": {
+        "strategy_quality_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "role_consistency_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "teamplay_score": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 5
+        },
+        "teamplay_breakdown": {
+          "type": "object",
+          "required": [
+            "alignment_score",
+            "coordination_signals_score",
+            "vote_formation_score",
+            "role_aware_teamplay_score"
+          ],
+          "properties": {
+            "alignment_score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "coordination_signals_score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "vote_formation_score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5
+            },
+            "role_aware_teamplay_score": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 5
+            }
+          }
+        }
+      }
+    },
+    "reasoning_summary": {
+      "type": "string"
+    },
+    "strengths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "weaknesses": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "key_evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    }
+  },
+  "$defs": {
+    "violation": {
+      "type": "object",
+      "required": [
+        "severity",
+        "event_refs",
+        "reason"
+      ],
+      "properties": {
+        "severity": {
+          "type": "string",
+          "enum": [
+            "minor",
+            "major"
+          ]
+        },
+        "event_refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "required": [
+        "event_ref",
+        "quote_or_fact",
+        "why_it_matters"
+      ],
+      "properties": {
+        "event_ref": {
+          "type": "string"
+        },
+        "quote_or_fact": {
+          "type": "string"
+        },
+        "why_it_matters": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
