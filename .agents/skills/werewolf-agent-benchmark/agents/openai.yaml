@@ -1,0 +1,4 @@
+interface:
+  display_name: "Werewolf Agent Benchmark"
+  short_description: "Run and inspect AIWolf benchmark workflows"
+  default_prompt: "Use $werewolf-agent-benchmark to run the repository's postgame judge benchmark on a game log and summarize the results."
