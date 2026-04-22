@@ -28,6 +28,9 @@ LLM-based agent for the AIWolf NLP Contest (Natural Language Division).
 git clone <this-repository-url>
 cd aiwolf
 
+# Install dependencies
+uv sync
+
 # Configure API key
 cp config/.env.example config/.env
 # Edit config/.env and fill in your API key
