@@ -131,6 +131,77 @@ ollama serve
 
 ---
 
+## Evaluation & Judge Workflow
+
+After running a game, use the LLM-as-a-judge pipeline to score player performance.
+
+### Build judge packets (without calling LLM)
+
+Extract and structure game logs into prompt-ready bundles:
+
+```bash
+python -m evaluate.build_judge_packets \
+  --log server/logs/game/1773290733_bmd_1x_bmd_2x_bmd_3x_bmd_4x_bmd_5x_bmd_6x_bmd_7x_bmd_8x_bmd_9x.log \
+  --json server/logs/json/1773290733_bmd_1x_bmd_2x_bmd_3x_bmd_4x_bmd_5x_bmd_6x_bmd_7x_bmd_8x_bmd_9x.json \
+  --out evaluate/out/sample \
+  --write-prompts
+```
+
+### Run the judge end-to-end
+
+Score each player using the configured LLM (Gemini, OpenAI, etc.):
+
+```bash
+python -m evaluate.run_judge \
+  --config config/config_gemini_jp.yml \
+  --log server/logs/game/1773290733_bmd_1x_bmd_2x_bmd_3x_bmd_4x_bmd_5x_bmd_6x_bmd_7x_bmd_8x_bmd_9x.log \
+  --json server/logs/json/1773290733_bmd_1x_bmd_2x_bmd_3x_bmd_4x_bmd_5x_bmd_6x_bmd_7x_bmd_8x_bmd_9x.json \
+  --out evaluate/out/judge_run
+```
+
+### Dry run (test without calling LLM)
+
+```bash
+python -m evaluate.run_judge \
+  --config config/config_gemini_jp.yml \
+  --log server/logs/game/1773290733_bmd_1x_bmd_2x_bmd_3x_bmd_4x_bmd_5x_bmd_6x_bmd_7x_bmd_8x_bmd_9x.log \
+  --json server/logs/json/1773290733_bmd_1x_bmd_2x_bmd_3x_bmd_4x_bmd_5x_bmd_6x_bmd_7x_bmd_8x_bmd_9x.json \
+  --out evaluate/out/dry_run \
+  --dry-run
+```
+
+### Scoring rubric
+
+The judge evaluates players across two layers:
+
+**Validity Layer**
+- `anti_hallucination_penalty` — penalizes factually incorrect statements
+- `rules_compliance_penalty` — penalizes rule violations
+
+**Quality Layer**
+- `strategy_quality_score` — game strategy effectiveness
+- `role_consistency_score` — consistency with claimed role
+- `teamplay_score` — team coordination (alignment, signals, voting, role awareness)
+
+See `evaluate/README.md` for full pipeline details.
+
+---
+
+## Game Simulation
+
+Run Monte Carlo simulations to analyze win rates and game dynamics:
+
+```bash
+python simulation.py
+```
+
+This simulates 50,000 games and reports:
+- Average game length (in days)
+- Villager win rate
+- Werewolf win rate
+
+---
+
 ## Configuration Files
 
 ### Agent config (`config/`)
@@ -181,6 +252,17 @@ aiwolf/
 │   ├── starter.py              # Connection handler
 │   ├── agent/                  # Agent implementation
 │   └── utils/                  # Utilities
+├── evaluate/
+│   ├── run_judge.py            # Judge execution CLI
+│   ├── build_judge_packets.py  # Bundle builder CLI
+│   ├── judge_schema.json       # Judge output schema
+│   ├── rubric.md               # Scoring rubric
+│   ├── parser.py               # Game log parser
+│   ├── packet_builder.py       # Bundle generator
+│   ├── templates/              # Jinja2 prompt templates
+│   ├── README.md               # Detailed pipeline docs
+│   └── out/                    # Judge outputs
+├── simulation.py               # Monte Carlo game simulator
 ├── Dockerfile                  # Agent Docker image
 ├── docker-compose.yml          # Docker Compose
 └── pyproject.toml              # Dependency definitions
