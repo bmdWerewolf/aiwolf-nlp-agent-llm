@@ -9,7 +9,7 @@ agent:
   kill_on_timeout: true
 
 llm:
-  type: openai
+  type: google
   sleep_time: 5
   max_retries: 3
 
@@ -65,7 +65,7 @@ openai:
   # max_tokens: 2048
 
 google:
-  model: gemini-2.0-flash-lite
+  model: gemini-2.5-flash-lite
   temperature: 0.7
 
 ollama:
@@ -174,8 +174,10 @@ prompt:
     {% endif %}
 
   talk: |-
-    ### フェーズ: 議論への発言                                                                                                                                                                                                                                                                                                                                          
-    {% set my_today_count = talk_history | selectattr('day', 'equalto', info.day) | selectattr('agent', 'equalto', info.agent) | list | length %}                                                                                                                                                                                                                                                       
+    ### フェーズ: 議論への発言
+    {% set my_today_count = talk_history | selectattr('day', 'equalto', info.day) | selectattr('agent', 'equalto', info.agent) | list | length %}
+    {% set max_talk_count = sent_talk_count + (info.remain_count if info.remain_count is not none else 0) %}
+    {% set remain_count = info.remain_count if info.remain_count is not none else 0 %}                                                                                                                                                                                                                                                       
     {% if info.day == 0 and my_today_count == 0 %}                                                                                                                                                        
     ### 指示: 0日目・1回目の発言                                                                                                                                                                          
     - これからゲームが始まります。ゲーム参加者に挨拶と自己紹介をしてください。 
@@ -188,9 +190,10 @@ prompt:
     [実際の挨拶内容（100文字以内・半角カンマ禁止）]
     </action>                                                                                                                                                  
                                                                                                                                                                                                             
-    {% elif info.day == 0 and my_today_count >= 1 %}                                                                                                                                                      
-    ### 指示: 0日目・2回目以降                                                                                                                                                                            
-    - これ以上発言する必要はありません。                                                                                                                                                                  
+    {% elif info.day == 0 and my_today_count >= 1 %}
+    ### 指示: 0日目・2回目以降
+    ターン情報: {{ my_today_count + 1 }}回目の発言 / 最大{{ max_talk_count }}回 (残り{{ remain_count }}回)
+    - これ以上発言する必要はありません。
     - 必ず <action>Over</action> とだけ出力してください。
 
     {% elif info.day >= 1 and my_today_count == 0 %}
@@ -207,6 +210,7 @@ prompt:
     {% endif %}
 
     ### 指示
+    ターン情報: {{ my_today_count + 1 }}回目の発言 / 最大{{ max_talk_count }}回 (残り{{ remain_count }}回)
     - この最初の発言ターンでは、**霊媒師COまたは占いCOおよび占い結果の通達がある場合のみそれを提示してください。**
     - 霊媒師CO、占いCO・占い結果の通達がない場合は、アイデンティティを活かした10文字程度の短い朝の挨拶のみに止めてください。議論・推理・投票先への言及は次のターン以降にしてください。
 
@@ -220,6 +224,7 @@ prompt:
 
     {% else %}
     ### 発言リクエスト ({{ info.day }}日目での発言)
+    ターン情報: {{ my_today_count + 1 }}回目の発言 / 最大{{ max_talk_count }}回 (残り{{ remain_count }}回)
 
     前回以降の新着会話:
     {% set new_talks = talk_history[sent_talk_count:] %}
@@ -267,6 +272,8 @@ prompt:
   whisper: |-
     ### フェーズ: 人狼同士の囁き会話
     {% set day0_talks = talk_history | selectattr('day', 'equalto', 0) | list %}
+    {% set max_whisper_count = sent_whisper_count + (info.remain_count if info.remain_count is not none else 0) %}
+    {% set remain_whisper_count = info.remain_count if info.remain_count is not none else 0 %}
 
     {% if info.day == 0 and day0_talks | length == 0 %}
     ### 指示: 0日目・1回目の囁き（自己紹介前）
@@ -275,6 +282,7 @@ prompt:
 
     {% elif info.day == 0 and day0_talks | length > 0 %}
     ### 指示: 0日目・2回目の囁き（自己紹介後）
+    ターン情報: {{ sent_whisper_count + 1 }}回目の囁き / 最大{{ max_whisper_count }}回 (残り{{ remain_whisper_count }}回)
     - 自己紹介フェーズが終わりました。仲間の人狼と1日目以降の戦略を相談してください。
     - 初期方針を相談して決めてください。基本的には狂人が占い師を騙るのがテンプレートです。
 
@@ -298,6 +306,7 @@ prompt:
 
     {% else %}
     ### 囁きリクエスト ({{ info.day }}日目での囁き)
+    ターン情報: {{ sent_whisper_count + 1 }}回目の囁き / 最大{{ max_whisper_count }}回 (残り{{ remain_whisper_count }}回)
 
     前回以降の新着囁き:
     {% set new_whispers = whisper_history[sent_whisper_count:] %}
