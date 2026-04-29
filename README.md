@@ -3,6 +3,8 @@
 LLM-based agent for the AIWolf NLP Contest (Natural Language Division).
 **Default configuration: 9-player game.** 5-player mode is also supported.
 
+![AIWolf demo](aiwolf_demo.png)
+
 ## Prerequisites
 
 ### For local execution

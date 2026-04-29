@@ -1,7 +1,7 @@
 web_socket:
-  url: ws://localhost:8080/ws
+  url: ws://133.167.32.100:8009/ws
   token:
-  auto_reconnect: false
+  auto_reconnect: true
 
 agent:
   num: 9
@@ -9,7 +9,7 @@ agent:
   kill_on_timeout: true
 
 llm:
-  type: google
+  type: openai
   sleep_time: 5
   max_retries: 3
 
@@ -58,11 +58,9 @@ turn_skills:
     trust_recovery: 自分の発言矛盾や不信を修復する場面
 
 openai:
-  model: gpt-5-mini
+  model: google/gemini-3.1-pro-preview
   temperature: 0.7
-  # base_url: http://127.0.0.1:8000/v1
-  # api_key: "dummy"
-  # max_tokens: 2048
+  base_url: https://openrouter.ai/api/v1
 
 google:
   model: gemini-2.5-flash-lite
