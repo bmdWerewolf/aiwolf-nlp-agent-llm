@@ -19,7 +19,11 @@ cot:
 
 # 記憶管理設定
 memory:
+  enabled: true
   type: 0
+  keep_llm_turns: 2
+  summary_max_words: 180
+  summary_input_max_events: 80
   rolling_summary:
     buffer_size: 5
   game_state:
