@@ -194,6 +194,7 @@ class Agent:
             "sent_whisper_count": self.sent_whisper_count,
             "role_skill_text": self.role_skill_text,
             "use_builtin_role_strategy": self.use_builtin_role_strategy,
+            "max_chars": int(self.config.get("rules", {}).get("max_chars", 100)),
         }
         template: Template = Template(prompt)
         prompt = template.render(**key).strip()
@@ -391,11 +392,14 @@ class Agent:
         model_type = str(self.config["llm"]["type"])
         match model_type:
             case "openai":
-                self.llm_model = ChatOpenAI(
-                    model=str(self.config["openai"]["model"]),
-                    temperature=float(self.config["openai"]["temperature"]),
-                    api_key=SecretStr(os.environ["OPENAI_API_KEY"]),
-                )
+                openai_kwargs: dict = {
+                    "model": str(self.config["openai"]["model"]),
+                    "temperature": float(self.config["openai"]["temperature"]),
+                    "api_key": SecretStr(os.environ["OPENAI_API_KEY"]),
+                }
+                if self.config.get("openai", {}).get("base_url"):
+                    openai_kwargs["base_url"] = str(self.config["openai"]["base_url"])
+                self.llm_model = ChatOpenAI(**openai_kwargs)
             case "google":
                 self.llm_model = ChatGoogleGenerativeAI(
                     model=str(self.config["google"]["model"]),
@@ -420,6 +424,7 @@ class Agent:
                 "role": self.role,
                 "role_skill_text": self.role_skill_text,
                 "use_builtin_role_strategy": self.use_builtin_role_strategy,
+                "max_chars": int(self.config.get("rules", {}).get("max_chars", 100)),
             }
             system_prompt = Template(self.config["prompt"]["system"]).render(**key).strip()
             self.llm_message_history = [SystemMessage(content=system_prompt)]

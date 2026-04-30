@@ -111,7 +111,7 @@ def connect(config: dict[str, Any], idx: int = 1) -> None:
         config (dict[str, Any]): Configuration dictionary / 設定辞書
         idx (int): Agent index (default: 1) / エージェントインデックス (デフォルト: 1)
     """
-    name = f"{config['agent']['team']}_{idx}x"
+    name = f"{config['agent']['team']}"
     while True:
         try:
             client = create_client(config)
