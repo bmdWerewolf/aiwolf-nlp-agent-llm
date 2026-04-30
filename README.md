@@ -139,6 +139,64 @@ ollama serve
 | `.env` | API keys (gitignored — must be created) |
 | `.env.example` | API key template |
 
+### Memory config
+
+The `memory` block in each agent config controls compact game memory. It is
+used by `src/agent/agent.py` before normal LLM requests.
+
+```yaml
+memory:
+  enabled: true
+  type: 0
+  keep_llm_turns: 2
+  summary_max_words: 180
+  summary_input_max_events: 80
+  rolling_summary:
+    buffer_size: 5
+  game_state:
+    suspicion_decay: 0.1
+  belief_reflexion:
+    reflexion_interval: 1
+```
+
+Field meanings:
+
+- `enabled`: turns memory on or off.
+- `keep_llm_turns`: keeps only the latest N normal Human/AI turns in
+  `llm_message_history`; older game context is carried by memory.
+- `summary_max_words`: asks the LLM to summarize each completed day within this
+  word limit. The code does not truncate the summary; if it is too long, it asks
+  the LLM to compress it again.
+- `summary_input_max_events`: limits how many recent talk/whisper events from
+  the day are sent to the summary call.
+- `rolling_summary.buffer_size`: fallback raw-event buffer used when an LLM
+  summary is unavailable.
+- `game_state.suspicion_decay`: lowers the weight of older suspicion signals.
+- `belief_reflexion.reflexion_interval`: reserved for future belief-reflection
+  logic.
+
+Runtime behavior:
+
+- On `INITIALIZE`, memory is reset for the new game.
+- On each `DAILY_FINISH`, the agent summarizes that full day with the LLM.
+- The memory prompt does not ask the LLM to summarize system rules.
+- Every later request receives a compact `Game Memory` section with valid
+  players, alive/dead players, role strategy, LLM round summaries, and rated
+  suspicion or target priority.
+- The valid player list is generated from the server state, so names not in the
+  game should be treated as fake or irrelevant.
+- For `WEREWOLF` and `POSSESSED`, ratings mean target priority for the agent's
+  win condition; for village-side roles, ratings mean werewolf suspicion.
+
+If timeouts are tight, reduce memory cost:
+
+```yaml
+memory:
+  keep_llm_turns: 1
+  summary_max_words: 120
+  summary_input_max_events: 40
+```
+
 ### Server config (`server/`)
 
 | File | Purpose |
