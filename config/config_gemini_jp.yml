@@ -1,5 +1,5 @@
 web_socket:
-  url: ws://133.167.32.100:8009/ws
+  url: ws://133.167.32.100:8005/ws
   token:
   auto_reconnect: false
 
@@ -7,7 +7,7 @@ rules:
   max_chars: 50
 
 agent:
-  num: 9
+  num: 5
   team: bmd
   kill_on_timeout: true
 
@@ -22,6 +22,7 @@ cot:
 
 # 記憶管理設定
 memory:
+  enabled: true
   type: 0
   rolling_summary:
     buffer_size: 5

@@ -18,6 +18,7 @@ cot:
 
 # 記憶管理設定
 memory:
+  enabled: true
   type: 0
   rolling_summary:
     buffer_size: 5
