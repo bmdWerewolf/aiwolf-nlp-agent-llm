@@ -10,6 +10,7 @@ import random
 import re
 from pathlib import Path
 from time import sleep
+from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar
 
 from dotenv import load_dotenv
@@ -187,8 +188,8 @@ class Agent:
         key = {
             "info": self.info,
             "setting": self.setting,
-            "talk_history": self.talk_history,
-            "whisper_history": self.whisper_history,
+            "talk_history": self._sanitize_history_for_prompt(self.talk_history),
+            "whisper_history": self._sanitize_history_for_prompt(self.whisper_history),
             "role": self.role,
             "sent_talk_count": self.sent_talk_count,
             "sent_whisper_count": self.sent_whisper_count,
@@ -363,12 +364,45 @@ class Agent:
             return None
         match = re.search(r"<action>(.*?)</action>", response, re.DOTALL)
         if match:
-            return match.group(1).strip()
+            return Agent._strip_public_markup(match.group(1)).strip()
         # 閉じタグなしのケース: <action>content (LLMが</action>を省略した場合)
         match = re.search(r"<action>(.+)", response, re.DOTALL)
         if match:
-            return match.group(1).strip()
-        return response
+            return Agent._strip_public_markup(match.group(1)).strip()
+        fallback = Agent._strip_public_markup(response).strip()
+        return fallback or "Over"
+
+    @staticmethod
+    def _strip_public_markup(text: str | None) -> str:
+        """Remove private reasoning and XML-like tags before public use."""
+        if not text:
+            return ""
+        cleaned = re.sub(r"<thinking>.*?</thinking>", "", text, flags=re.DOTALL | re.IGNORECASE)
+        cleaned = re.sub(r"<thinking>.*$", "", cleaned, flags=re.DOTALL | re.IGNORECASE)
+        cleaned = re.sub(r"</?[^>]+>", "", cleaned)
+        return cleaned.strip()
+
+    @classmethod
+    def _sanitize_history_for_prompt(cls, history: list[Talk]) -> list[SimpleNamespace]:
+        """Expose only public utterance text when rendering prompt history."""
+        sanitized: list[SimpleNamespace] = []
+        for item in history:
+            text = getattr(item, "text", "")
+            action_match = re.search(r"<action>(.*?)</action>", text, re.DOTALL)
+            if action_match:
+                text = action_match.group(1)
+            sanitized.append(
+                SimpleNamespace(
+                    idx=getattr(item, "idx", None),
+                    day=getattr(item, "day", None),
+                    turn=getattr(item, "turn", None),
+                    agent=getattr(item, "agent", None),
+                    text=cls._strip_public_markup(text) or "Over",
+                    skip=getattr(item, "skip", False),
+                    over=getattr(item, "over", False),
+                ),
+            )
+        return sanitized
 
     @timeout
     def name(self) -> str:
