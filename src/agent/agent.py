@@ -203,6 +203,7 @@ class Agent:
             self.agent_logger.logger.error("LLM is not initialized")
             return None
         prompt = self._inject_turn_skill_if_needed(request, prompt)
+        self._trim_llm_message_history()
         max_retries = int(self.config.get("llm", {}).get("max_retries", 3))
         for attempt in range(max_retries):
             try:
@@ -349,6 +350,20 @@ class Agent:
         if not decision_reason:
             decision_reason = "router selected"
         return selected_skill_id, decision_reason
+
+    def _trim_llm_message_history(self) -> None:
+        """Keep LLM chat history bounded because prompts already carry game state."""
+        max_history = int(self.config.get("llm", {}).get("max_message_history", 6))
+        if max_history < 0:
+            return
+
+        system_messages = [msg for msg in self.llm_message_history if isinstance(msg, SystemMessage)]
+        non_system_messages = [msg for msg in self.llm_message_history if not isinstance(msg, SystemMessage)]
+        kept_system = system_messages[:1]
+        if max_history == 0:
+            self.llm_message_history = kept_system
+            return
+        self.llm_message_history = kept_system + non_system_messages[-max_history:]
 
     @staticmethod
     def _extract_action(response: str | None) -> str | None:
