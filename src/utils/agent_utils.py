@@ -53,9 +53,10 @@ def init_agent_from_packet(
     role = packet.info.role_map.get(packet.info.agent)
     if not role:
         raise ValueError(packet.info, "Role not found")
+    agent_name = packet.info.agent or name
     return ROLE_TO_AGENT_CLS[role](
         config=config,
-        name=name,
+        name=agent_name,
         game_id=packet.info.game_id,
         role=role,
     )

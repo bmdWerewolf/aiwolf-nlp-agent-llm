@@ -196,6 +196,7 @@ class Agent:
             "role_skill_text": self.role_skill_text,
             "use_builtin_role_strategy": self.use_builtin_role_strategy,
             "max_chars": int(self.config.get("rules", {}).get("max_chars", 100)),
+            "min_chars": int(self.config.get("rules", {}).get("min_chars", 30)),
         }
         template: Template = Template(prompt)
         prompt = template.render(**key).strip()
@@ -459,6 +460,7 @@ class Agent:
                 "role_skill_text": self.role_skill_text,
                 "use_builtin_role_strategy": self.use_builtin_role_strategy,
                 "max_chars": int(self.config.get("rules", {}).get("max_chars", 100)),
+                "min_chars": int(self.config.get("rules", {}).get("min_chars", 30)),
             }
             system_prompt = Template(self.config["prompt"]["system"]).render(**key).strip()
             self.llm_message_history = [SystemMessage(content=system_prompt)]
