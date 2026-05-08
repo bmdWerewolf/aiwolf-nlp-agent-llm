@@ -4,8 +4,8 @@ web_socket:
   auto_reconnect: 5
 
 rules:
-  max_chars: 70
-  min_chars: 55
+  max_chars: 50
+  min_chars: 40
 
 agent:
   num: 9
