@@ -128,5 +128,12 @@ def connect(config: dict[str, Any], idx: int = 1) -> None:
             )
             logger.warning(ex)
 
-        if not bool(config["web_socket"]["auto_reconnect"]):
+        reconnect = config["web_socket"]["auto_reconnect"]
+        if reconnect is True:
+            continue
+        if not reconnect:
             break
+        reconnect = int(reconnect)
+        if reconnect <= 1:
+            break
+        config["web_socket"]["auto_reconnect"] = reconnect - 1
